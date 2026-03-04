@@ -1,5 +1,11 @@
 School Clubs Website Development
 First Semester Process Documentation
+
+BEFORE READING ANYTHING BELOW, READ THE START_HERE DOCUMENT IN THE DIRECTORY ABOVE. 
+
+
+
+
 Executive Summary
 This document outlines the comprehensive process for developing a school clubs website during the first semester. The project aims to create a centralized digital platform where students can discover clubs, learn about their activities and achievements, and make informed decisions about club participation. This initiative addresses the limitations of traditional club fairs by providing year-round access to club information.
 1. Project Overview

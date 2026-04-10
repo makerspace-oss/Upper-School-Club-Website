@@ -4,7 +4,6 @@ import { clubs as fallbackClubs, getAllTags } from "./data/clubs";
 import { ClubCard } from "./components/ClubCard";
 import { SearchAndFilter } from "./components/SearchAndFilter";
 import { SchedulePage } from "./pages/SchedulePage";
-import { supabase } from "./lib/supabaseClient";
 import { fetchClubsFromSheet } from "./lib/googleSheetClient";
 import "./App.css";
 
@@ -28,7 +27,6 @@ export default function App() {
   const [expandedId, setExpandedId] = useState(() => getSearchParam("club") || null);
   const [visibleCount, setVisibleCount] = useState(9);
   const [sheetClubs, setSheetClubs] = useState(null);
-  const [remoteClubs, setRemoteClubs] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [scheduleClubs, setScheduleClubs] = useState([]);
@@ -42,50 +40,27 @@ export default function App() {
     else setSearchParam("club", "");
   }, [expandedId]);
 
-  // Load clubs from Google Sheets first, then Supabase as a fallback.
+  // Load clubs from Google Sheets, fall back to local data.
   useEffect(() => {
     let isMounted = true;
-    async function loadAll() {
+    async function loadClubs() {
       try {
         setLoading(true);
         setError(null);
 
-        // 1) Try Google Sheet (if configured)
-        try {
-          const sheetData = await fetchClubsFromSheet();
-          if (isMounted && sheetData && sheetData.length > 0) {
-            setSheetClubs(sheetData);
-          }
-        } catch (sheetError) {
-          console.error("[GoogleSheet] Failed to load clubs", sheetError);
-          if (isMounted) {
-            setError(
-              "Unable to load clubs from Google Sheet. Falling back to other sources."
-            );
-          }
-        }
-
-        // 2) Optionally load from Supabase if a client is configured
-        if (supabase) {
-          const { data, error: dbError } = await supabase
-            .from("clubs")
-            .select(
-              "id, Club_Name, Club_Icon_URL, Club_Description, Club_Proctors, Club_Tags, Meet_Days, Commitment, Status"
-            );
-          if (dbError) throw dbError;
-          if (!isMounted) return;
-          setRemoteClubs(data ?? []);
+        const sheetData = await fetchClubsFromSheet();
+        if (isMounted && sheetData && sheetData.length > 0) {
+          setSheetClubs(sheetData);
         }
       } catch (e) {
         if (!isMounted) return;
-        console.error("[Data] Failed to load remote clubs", e);
-        setError("Unable to load clubs from remote sources. Showing local data instead.");
-        setRemoteClubs(null);
+        console.error("[GoogleSheet] Failed to load clubs", e);
+        setError("Unable to load clubs from Google Sheet. Showing local data instead.");
       } finally {
         if (isMounted) setLoading(false);
       }
     }
-    loadAll();
+    loadClubs();
     return () => {
       isMounted = false;
     };
@@ -99,9 +74,8 @@ export default function App() {
 
   const sourceClubs = useMemo(() => {
     if (sheetClubs && sheetClubs.length > 0) return sheetClubs;
-    if (remoteClubs && remoteClubs.length > 0) return remoteClubs;
     return fallbackClubs;
-  }, [sheetClubs, remoteClubs]);
+  }, [sheetClubs]);
 
   const filteredClubs = useMemo(() => {
     let list = sourceClubs.filter((c) => c.Status === "Active");
@@ -157,17 +131,34 @@ export default function App() {
   return (
     <div className="app">
       <nav className="app-nav">
+        <Link to="/" className="app-nav__brand">
+          <img
+            src="https://images.squarespace-cdn.com/content/v1/601586a260bac64bcb51fcdc/1621025263615-E7GTWIJFVTLA16ZMDNP3/Shipley_Inst_H_wTxt_fulclr_RGB+%281%29.png"
+            alt="The Shipley School"
+            className="app-nav__logo"
+          />
+        </Link>
         <Link
           to="/"
           className={`app-nav__link ${location.pathname === "/" ? "app-nav__link--active" : ""}`}
         >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+            <rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+            <rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+            <rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+          </svg>
           Clubs
         </Link>
         <Link
           to="/schedule"
           className={`app-nav__link ${location.pathname === "/schedule" ? "app-nav__link--active" : ""}`}
         >
-          Sample Schedule {scheduleClubs.length > 0 && `(${scheduleClubs.length})`}
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <rect x="1.5" y="3" width="13" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+            <path d="M1.5 6.5h13M5 1.5v3M11 1.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          Schedule {scheduleClubs.length > 0 && `(${scheduleClubs.length})`}
         </Link>
       </nav>
 
@@ -177,7 +168,9 @@ export default function App() {
           element={
             <SchedulePage
               scheduleClubs={scheduleClubs}
+              allClubs={sourceClubs}
               onRemove={removeFromSchedule}
+              onAdd={addToSchedule}
             />
           }
         />
@@ -185,63 +178,75 @@ export default function App() {
           path="/"
           element={
             <>
-              <header className="app-header">
-                <h1 className="app-title">School Clubs</h1>
-                <p className="app-subtitle">
-                  Discover clubs, activities, and affinity groups. Click a card to learn more.
-                </p>
+              <header className="app-hero">
+                <div className="app-hero__overlay" />
+                <div className="app-hero__content">
+                  <h1 className="app-hero__title">Upper School Clubs & Activities</h1>
+                  <p className="app-hero__subtitle">
+                    Discover clubs, activities, and affinity groups at Shipley. Click a card to learn more.
+                  </p>
+                </div>
               </header>
 
+              <div className="app-body">
+
               <SearchAndFilter
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        selectedTags={selectedTags}
-        allTags={allTags}
-        onTagToggle={handleTagToggle}
-      />
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                selectedTags={selectedTags}
+                allTags={allTags}
+                onTagToggle={handleTagToggle}
+              />
 
-      <div className="app-results">
-        {loading && (
-          <p className="app-status">Loading clubs…</p>
-        )}
-        {error && !loading && (
-          <p className="app-status app-status--error">{error}</p>
-        )}
-        {!loading && filteredClubs.length === 0 ? (
-          <p className="app-empty">No clubs match your search or filters.</p>
-        ) : (
-          <>
-            <div className="club-grid" role="list">
-              {visibleClubs.map((club) => (
-                <div key={club.id} className="club-grid__item" role="listitem">
-                  <ClubCard
-                    club={club}
-                    isExpanded={expandedId === club.id}
-                    onToggle={() => handleCardToggle(club.id)}
-                    onAddToSchedule={addToSchedule}
-                    isOnSchedule={scheduleIds.has(club.id)}
-                  />
-                </div>
-              ))}
-            </div>
-            {filteredClubs.length > visibleClubs.length && (
-              <div className="app-results__more">
-                <button
-                  type="button"
-                  className="app-results__more-button"
-                  onClick={() => setVisibleCount(filteredClubs.length)}
-                >
-                  Show all {filteredClubs.length} clubs
-                </button>
+              <div className="app-results">
+                {loading && (
+                  <p className="app-status">Loading clubs…</p>
+                )}
+                {error && !loading && (
+                  <p className="app-status app-status--error">{error}</p>
+                )}
+                {!loading && filteredClubs.length === 0 ? (
+                  <p className="app-empty">No clubs match your search or filters.</p>
+                ) : (
+                  <>
+                    <div className="club-grid" role="list">
+                      {visibleClubs.map((club) => (
+                        <div key={club.id} className="club-grid__item" role="listitem">
+                          <ClubCard
+                            club={club}
+                            isExpanded={expandedId === club.id}
+                            onToggle={() => handleCardToggle(club.id)}
+                            onAddToSchedule={addToSchedule}
+                            isOnSchedule={scheduleIds.has(club.id)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    {filteredClubs.length > visibleClubs.length && (
+                      <div className="app-results__more">
+                        <button
+                          type="button"
+                          className="app-results__more-button"
+                          onClick={() => setVisibleCount(filteredClubs.length)}
+                        >
+                          Show all {filteredClubs.length} clubs
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
-            )}
-          </>
-        )}
-      </div>
 
-      <footer className="app-footer">
-        <p>Centralized club information — year-round access.</p>
-      </footer>
+              </div>
+
+              <footer className="app-footer">
+                <img
+                  src="https://images.squarespace-cdn.com/content/v1/601586a260bac64bcb51fcdc/1621025263615-E7GTWIJFVTLA16ZMDNP3/Shipley_Inst_H_wTxt_fulclr_RGB+%281%29.png"
+                  alt="The Shipley School"
+                  className="app-footer__logo"
+                />
+                <p>The Shipley School — Upper School Clubs & Activities</p>
+              </footer>
             </>
           }
         />

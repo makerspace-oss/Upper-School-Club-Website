@@ -79,24 +79,29 @@ export function ClubCard({ club, isExpanded, onToggle, onAddToSchedule, isOnSche
           {club.Club_Description && (
             <p className="club-card__description">{club.Club_Description}</p>
           )}
+          {club.Leadership && (
+            <p className="club-card__meta">
+              <strong>Leadership:</strong> {club.Leadership}
+            </p>
+          )}
           {club.Club_Proctors && (
             <p className="club-card__meta">
-              <strong>Proctors:</strong> {club.Club_Proctors}
+              <strong>Student Leaders:</strong> {club.Club_Proctors}
+            </p>
+          )}
+          {club.Meet_Days && (
+            <p className="club-card__meta">
+              <strong>Meeting Day:</strong> {club.Meet_Days}
+            </p>
+          )}
+          {club.Notes && (
+            <p className="club-card__meta">
+              <strong>Notes:</strong> {club.Notes}
             </p>
           )}
           {tags.length > 0 && (
             <p className="club-card__meta">
               <strong>Tags:</strong> {tags.join(", ")}
-            </p>
-          )}
-          {club.Meet_Days && (
-            <p className="club-card__meta">
-              <strong>Meet days:</strong> {club.Meet_Days}
-            </p>
-          )}
-          {(club.Commitment || club.Achievements) && (
-            <p className="club-card__meta">
-              <strong>Commitment:</strong> {club.Commitment || club.Achievements}
             </p>
           )}
           {onAddToSchedule && (

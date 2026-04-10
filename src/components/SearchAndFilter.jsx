@@ -2,13 +2,13 @@ export function SearchAndFilter({ searchQuery, onSearchChange, selectedTags, all
   return (
     <div className="search-and-filter">
       <label htmlFor="club-search" className="search-and-filter__label">
-        Search clubs by name
+        Search clubs
       </label>
       <input
         id="club-search"
         type="search"
         className="search-and-filter__input"
-        placeholder="Type to search…"
+        placeholder="Type a club name…"
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
         autoComplete="off"
@@ -19,10 +19,15 @@ export function SearchAndFilter({ searchQuery, onSearchChange, selectedTags, all
       </p>
 
       <fieldset className="search-and-filter__tags">
-        <legend className="search-and-filter__legend">Filter by tag</legend>
+        <legend className="search-and-filter__legend">Filter by category</legend>
         <div className="search-and-filter__tag-list" role="group">
           {allTags.map((tag) => (
-            <label key={tag} className="search-and-filter__tag-label">
+            <label
+              key={tag}
+              className={`search-and-filter__tag-label${
+                selectedTags.includes(tag) ? " search-and-filter__tag-label--selected" : ""
+              }`}
+            >
               <input
                 type="checkbox"
                 checked={selectedTags.includes(tag)}

@@ -29,7 +29,12 @@ export default function App() {
   const [sheetClubs, setSheetClubs] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [scheduleClubs, setScheduleClubs] = useState([]);
+  const [scheduleClubs, setScheduleClubs] = useState(() => {
+    try {
+      const saved = localStorage.getItem("scheduleClubs");
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
 
   const location = useLocation();
 
@@ -39,6 +44,10 @@ export default function App() {
     if (expandedId) setSearchParam("club", expandedId);
     else setSearchParam("club", "");
   }, [expandedId]);
+
+  useEffect(() => {
+    localStorage.setItem("scheduleClubs", JSON.stringify(scheduleClubs));
+  }, [scheduleClubs]);
 
   // Load clubs from Google Sheets, fall back to local data.
   useEffect(() => {

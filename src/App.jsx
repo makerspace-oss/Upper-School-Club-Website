@@ -177,7 +177,9 @@ export default function App() {
           element={
             <SchedulePage
               scheduleClubs={scheduleClubs}
+              allClubs={sourceClubs}
               onRemove={removeFromSchedule}
+              onAdd={addToSchedule}
             />
           }
         />
@@ -222,6 +224,7 @@ export default function App() {
                           <ClubCard
                             club={club}
                             onAddToSchedule={addToSchedule}
+                            onRemoveFromSchedule={removeFromSchedule}
                             isOnSchedule={scheduleIds.has(club.id)}
                           />
                         </div>

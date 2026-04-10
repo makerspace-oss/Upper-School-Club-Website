@@ -6,7 +6,7 @@ function getTags(tagsString) {
   return tagsString.split(",").map((t) => t.trim()).filter(Boolean);
 }
 
-function ClubModal({ club, isOnSchedule, onAddToSchedule, onClose }) {
+function ClubModal({ club, isOnSchedule, onAddToSchedule, onRemoveFromSchedule, onClose }) {
   const [closing, setClosing] = useState(false);
   const [added, setAdded] = useState(false);
   const tags = getTags(club.Club_Tags);
@@ -113,35 +113,44 @@ function ClubModal({ club, isOnSchedule, onAddToSchedule, onClose }) {
 
         {onAddToSchedule && (
           <div className="club-modal__footer">
-            <button
-              type="button"
-              className={`club-modal__add-btn ${added || isOnSchedule ? "club-modal__add-btn--added" : ""}`}
-              onClick={handleAdd}
-              disabled={isOnSchedule && !added}
-            >
-              {added ? (
-                <>
-                  <svg className="club-modal__check" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                    <path d="M4 9.5l3.5 3.5L14 5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  Added to Schedule
-                </>
-              ) : isOnSchedule ? (
-                <>
+            {added ? (
+              <button type="button" className="club-modal__add-btn club-modal__add-btn--added" disabled>
+                <svg className="club-modal__check" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M4 9.5l3.5 3.5L14 5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Added to Schedule
+              </button>
+            ) : isOnSchedule ? (
+              <div className="club-modal__footer-row">
+                <button type="button" className="club-modal__add-btn club-modal__add-btn--added" disabled>
                   <svg className="club-modal__check" width="18" height="18" viewBox="0 0 18 18" fill="none">
                     <path d="M4 9.5l3.5 3.5L14 5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                   On Schedule
-                </>
-              ) : (
-                <>
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                    <path d="M9 3v12M3 9h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </button>
+                <button
+                  type="button"
+                  className="club-modal__remove-btn"
+                  onClick={() => {
+                    onRemoveFromSchedule(club.id);
+                    setClosing(true);
+                    setTimeout(onClose, 250);
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                   </svg>
-                  Add to Schedule
-                </>
-              )}
-            </button>
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <button type="button" className="club-modal__add-btn" onClick={handleAdd}>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M9 3v12M3 9h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+                Add to Schedule
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -150,7 +159,7 @@ function ClubModal({ club, isOnSchedule, onAddToSchedule, onClose }) {
   );
 }
 
-export function ClubCard({ club, onAddToSchedule, isOnSchedule }) {
+export function ClubCard({ club, onAddToSchedule, onRemoveFromSchedule, isOnSchedule }) {
   const [modalOpen, setModalOpen] = useState(false);
   const tags = getTags(club.Club_Tags);
   const hasIcon = club.Club_Icon_URL && club.Club_Icon_URL.trim() !== "";
@@ -204,6 +213,7 @@ export function ClubCard({ club, onAddToSchedule, isOnSchedule }) {
           club={club}
           isOnSchedule={isOnSchedule}
           onAddToSchedule={onAddToSchedule}
+          onRemoveFromSchedule={onRemoveFromSchedule}
           onClose={() => setModalOpen(false)}
         />
       )}

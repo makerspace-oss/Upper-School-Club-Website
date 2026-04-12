@@ -311,20 +311,43 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
   const handleExport = useCallback(async () => {
     if (!scheduleRef.current) return;
     try {
-      const el = scheduleRef.current;
-      const prevStyle = el.getAttribute("style") || "";
-      el.style.width = "900px";
-      el.style.maxWidth = "none";
-      el.style.overflow = "visible";
-      el.style.padding = "24px";
+      // Clone into an offscreen container so we don't disturb the live layout
+      const offscreen = document.createElement("div");
+      offscreen.style.cssText = `
+        position: fixed; left: -9999px; top: 0;
+        width: 860px; padding: 32px;
+        background: #f7f8fa; z-index: -1;
+        font-family: ${getComputedStyle(document.body).fontFamily};
+      `;
+      // Copy all stylesheets so the clone renders correctly
+      document.body.appendChild(offscreen);
+      const clone = scheduleRef.current.cloneNode(true);
+      // Remove any × buttons and overlap animations from export
+      clone.querySelectorAll(".week-grid__event-remove").forEach((b) => b.remove());
+      clone.querySelectorAll(".week-grid__header-badge").forEach((b) => b.remove());
+      clone.style.cssText = "";
+      offscreen.appendChild(clone);
+
+      // Wait for layout
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-      const dataUrl = await toPng(el, { backgroundColor: "#f7f8fa", pixelRatio: 2, cacheBust: true });
-      el.setAttribute("style", prevStyle);
+
+      const dataUrl = await toPng(offscreen, {
+        backgroundColor: "#f7f8fa",
+        pixelRatio: 3,
+        cacheBust: true,
+        width: offscreen.scrollWidth,
+        height: offscreen.scrollHeight,
+      });
+
+      document.body.removeChild(offscreen);
+
       const link = document.createElement("a");
       link.download = "my-club-schedule.png";
       link.href = dataUrl;
       link.click();
-    } catch (err) { console.error("Failed to export:", err); }
+    } catch (err) {
+      console.error("Failed to export:", err);
+    }
   }, []);
 
   const handleShare = useCallback(() => {

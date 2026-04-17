@@ -129,12 +129,25 @@
 }
 
 .week-grid__header-label {
+  display: inline-block;
   font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 700;
   color: var(--white);
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+
+/* ── Export-only safety spacing to avoid header clipping in PNG ── */
+[data-exporting="true"] .week-grid__header {
+  padding-top: 0.9rem;
+  padding-bottom: 0.9rem;
+}
+
+[data-exporting="true"] .week-grid__header-label {
+  line-height: 1.2;
+  padding-top: 2px;
+  padding-bottom: 2px;
 }
 
 .week-grid__table {

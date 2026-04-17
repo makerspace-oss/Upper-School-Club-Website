@@ -264,6 +264,7 @@ function WeekGrid({ weekType, clubs, allClubs, scheduleIds, onRemove, onReplace,
 /* ─── Schedule Page ─── */
 export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) {
   const scheduleRef = useRef(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const scheduleIds = useMemo(
     () => new Set(scheduleClubs.map((c) => c.id)),
@@ -281,10 +282,17 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
   const handleExport = useCallback(async () => {
     if (!scheduleRef.current) return;
     try {
+      setIsExporting(true);
+      if (document.fonts?.ready) {
+        await document.fonts.ready;
+      }
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+
       const dataUrl = await toPng(scheduleRef.current, {
         backgroundColor: "#f7f8fa",
         pixelRatio: 2,
         style: { padding: "24px" },
+        cacheBust: true,
       });
       const link = document.createElement("a");
       link.download = "my-club-schedule.png";
@@ -292,6 +300,8 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
       link.click();
     } catch (err) {
       console.error("Failed to export schedule:", err);
+    } finally {
+      setIsExporting(false);
     }
   }, []);
 
@@ -318,15 +328,20 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
               type="button"
               className="schedule-page__export-btn"
               onClick={handleExport}
+              disabled={isExporting}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path d="M8 1v9m0 0L5 7m3 3l3-3M2 12v1.5A1.5 1.5 0 003.5 15h9a1.5 1.5 0 001.5-1.5V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              Export as PNG
+              {isExporting ? "Exporting…" : "Export as PNG"}
             </button>
           </div>
 
-          <div ref={scheduleRef} className="schedule-page__grids">
+          <div
+            ref={scheduleRef}
+            className="schedule-page__grids"
+            data-exporting={isExporting ? "true" : "false"}
+          >
             <WeekGrid
               weekType="Blue"
               clubs={scheduleClubs}

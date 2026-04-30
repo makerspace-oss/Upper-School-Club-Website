@@ -5,6 +5,7 @@ import { ClubCard } from "./components/ClubCard";
 import { SearchAndFilter } from "./components/SearchAndFilter";
 import { SchedulePage } from "./pages/SchedulePage";
 import { fetchClubsFromSheet } from "./lib/googleSheetClient";
+import { Analytics } from "@vercel/analytics/react";
 import "./App.css";
 
 
@@ -278,6 +279,7 @@ export default function App() {
           }
         />
       </Routes>
+      <Analytics />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useMemo, useRef, useCallback, useState } from "react";
 import { Link } from "react-router-dom";
 import { toPng } from "html-to-image";
+import { ClubModal } from "../components/ClubCard";
 import "./SchedulePage.css";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
@@ -105,11 +106,8 @@ function findAlternatives(allClubs, scheduleIds, day, weekType) {
   });
 }
 
-/* ─── Replace Modal ─── */
-function ReplaceModal({ club, day, weekType, alternatives, onReplace, onClose }) {
-  const clubWeeks = getClubWeeks(club);
-  const isMultiWeek = clubWeeks.length > 1;
-
+/* ─── Overlap Modal ─── */
+function OverlapModal({ club, currentDay, weekType, freeDays, alternatives, onMove, onSwap, onRemove, onView, onClose }) {
   return (
     <div className="replace-modal__backdrop" onClick={onClose}>
       <div className="replace-modal" onClick={(e) => e.stopPropagation()}>
@@ -126,30 +124,36 @@ function ReplaceModal({ club, day, weekType, alternatives, onReplace, onClose })
             Replacing it will remove it from all weeks.
           </p>
         )}
-        {alternatives.length === 0 ? (
-          <p className="replace-modal__empty">
-            No other clubs meet on {day} during {weekType} week.
-          </p>
-        ) : (
-          <ul className="replace-modal__list">
-            {alternatives.map((alt) => (
-              <li key={alt.id} className="replace-modal__item">
-                <div className="replace-modal__item-info">
-                  <span className="replace-modal__item-name">{alt.Club_Name}</span>
-                  {alt.Meet_Days && (
-                    <span className="replace-modal__item-days">{alt.Meet_Days}</span>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  className="replace-modal__item-btn"
-                  onClick={() => onReplace(club.id, alt)}
-                >
-                  Switch
-                </button>
-              </li>
-            ))}
-          </ul>
+
+        {alternatives.length > 0 && (
+          <div className="replace-modal__section">
+            <p className="replace-modal__hint">Or swap for a different club:</p>
+            <ul className="replace-modal__list">
+              {alternatives.slice(0, 5).map((alt) => (
+                <li key={alt.id} className="replace-modal__item">
+                  <div className="replace-modal__item-info">
+                    <span className="replace-modal__item-name">{alt.Club_Name}</span>
+                    <span className="replace-modal__item-days">{alt.Meet_Days || "See schedule"}</span>
+                  </div>
+                  <div className="replace-modal__item-actions">
+                    <button
+                      type="button"
+                      className="replace-modal__item-icon-btn"
+                      onClick={() => onView(alt)}
+                      aria-label={`View details for ${alt.Club_Name}`}
+                      title="View details"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                        <path d="M1 8c1.5-3 4-5 7-5s5.5 2 7 5c-1.5 3-4 5-7 5s-5.5-2-7-5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+                        <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.5"/>
+                      </svg>
+                    </button>
+                    <button type="button" className="replace-modal__item-btn" onClick={() => onSwap(club.id, alt)}>Swap</button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </div>
     </div>
@@ -159,7 +163,8 @@ function ReplaceModal({ club, day, weekType, alternatives, onReplace, onClose })
 /* ─── Week Grid ─── */
 function WeekGrid({ weekType, clubs, allClubs, scheduleIds, onRemove, onReplace, color }) {
   const [modalClub, setModalClub] = useState(null);
-  const [modalDay, setModalDay] = useState(null);
+  const [modalDayIdx, setModalDayIdx] = useState(null);
+  const [viewClub, setViewClub] = useState(null);
 
   const grid = useMemo(() => buildWeekGrid(clubs, weekType), [clubs, weekType]);
   const overlaps = useMemo(() => findOverlaps(grid), [grid]);
@@ -183,24 +188,36 @@ function WeekGrid({ weekType, clubs, allClubs, scheduleIds, onRemove, onReplace,
         <span className="week-grid__header-label">{weekType} Week</span>
       </div>
 
-      {overlaps.length > 0 && (
-        <div className="week-grid__overlap-warning">
-          {overlaps.length} overlap{overlaps.length > 1 ? "s" : ""} detected — click a club to replace it
-        </div>
-      )}
-
-      <div className="week-grid__table">
-        <div className="week-grid__corner" style={{ background: color }} />
-        {DAYS.map((day) => (
-          <div key={day} className="week-grid__day-head" style={{ background: color }}>
-            {day}
-          </div>
-        ))}
-        {TIME_SLOTS.map((slot, slotIdx) => (
-          <div key={slot.label} className="week-grid__row" role="row">
-            <div className="week-grid__slot-label">
-              <span className="week-grid__slot-time">{slot.label}</span>
-              <span className="week-grid__slot-duration">{slot.duration} min</span>
+      <div className="week-grid__days">
+        {DAYS.map((day, dayIdx) => {
+          const dayClubs = grid[dayIdx] || [];
+          const hasOverlap = overlapDays.has(dayIdx);
+          return (
+            <div key={day} className={`week-grid__day${hasOverlap ? " week-grid__day--overlap" : ""}`}>
+              <div className="week-grid__day-label" style={{ background: color }}>{day}</div>
+              <div className="week-grid__day-clubs">
+                {dayClubs.length === 0 && (
+                  <span className="week-grid__day-empty">—</span>
+                )}
+                {dayClubs.map((club) => (
+                  <div
+                    key={club.id}
+                    className={`week-grid__event${hasOverlap ? " week-grid__event--overlap" : ""}`}
+                    style={{ borderLeftColor: color, cursor: hasOverlap ? "pointer" : "default" }}
+                    onClick={hasOverlap ? () => { setModalClub(club); setModalDayIdx(dayIdx); } : undefined}
+                    title={hasOverlap ? "Click to resolve overlap" : club.Club_Name}
+                  >
+                    <span className="week-grid__event-time">Flex</span>
+                    <span className="week-grid__event-name">{club.Club_Name}</span>
+                    <button
+                      type="button"
+                      className="week-grid__event-remove"
+                      onClick={(e) => { e.stopPropagation(); onRemove(club.id); }}
+                      aria-label={`Remove ${club.Club_Name}`}
+                    >&times;</button>
+                  </div>
+                ))}
+              </div>
             </div>
             {DAYS.map((_, dayIdx) => {
               const cellClubs = getClubs(dayIdx, slotIdx);
@@ -246,15 +263,19 @@ function WeekGrid({ weekType, clubs, allClubs, scheduleIds, onRemove, onReplace,
           day={modalDay}
           weekType={weekType}
           alternatives={alternatives}
-          onReplace={(oldId, newClub) => {
-            onReplace(oldId, newClub);
-            setModalClub(null);
-            setModalDay(null);
-          }}
-          onClose={() => {
-            setModalClub(null);
-            setModalDay(null);
-          }}
+          onMove={(id, wk, di) => { onMoveDay(id, wk, di); setModalClub(null); setModalDayIdx(null); }}
+          onSwap={(id, nc) => { onSwap(id, nc); setModalClub(null); setModalDayIdx(null); }}
+          onRemove={onRemove}
+          onView={(c) => setViewClub(c)}
+          onClose={() => { setModalClub(null); setModalDayIdx(null); }}
+        />
+      )}
+
+      {viewClub && (
+        <ClubModal
+          club={viewClub}
+          isOnSchedule={scheduleIds.has(viewClub.id)}
+          onClose={() => setViewClub(null)}
         />
       )}
     </div>
@@ -282,18 +303,46 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
   const handleExport = useCallback(async () => {
     if (!scheduleRef.current) return;
     try {
-      setIsExporting(true);
-      if (document.fonts?.ready) {
-        await document.fonts.ready;
-      }
-      await new Promise((resolve) => requestAnimationFrame(resolve));
+      const el = scheduleRef.current;
 
-      const dataUrl = await toPng(scheduleRef.current, {
+      // Save original inline style; force a fixed render width so nothing wraps differently or clips
+      const prevStyle = el.getAttribute("style") || "";
+      const prevTransform = el.style.transform;
+
+      el.style.width = "1100px";
+      el.style.maxWidth = "1100px";
+      el.style.padding = "24px";
+      el.style.background = "#f7f8fa";
+      el.style.borderRadius = "0";
+
+      // Hide remove buttons in the export
+      const removeBtns = Array.from(el.querySelectorAll(".week-grid__event-remove"));
+      removeBtns.forEach((b) => { b.dataset.prevDisplay = b.style.display; b.style.display = "none"; });
+
+      // Force layout reflow
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+      // Use scrollWidth/scrollHeight to capture the full content
+      const width = Math.max(el.scrollWidth, 1100);
+      const height = el.scrollHeight;
+
+      const dataUrl = await toPng(el, {
         backgroundColor: "#f7f8fa",
         pixelRatio: 2,
         style: { padding: "24px" },
         cacheBust: true,
+        width,
+        height,
+        canvasWidth: width * 3,
+        canvasHeight: height * 3,
+        style: { transform: "none" },
       });
+
+      // Restore everything
+      el.setAttribute("style", prevStyle);
+      el.style.transform = prevTransform;
+      removeBtns.forEach((b) => { b.style.display = b.dataset.prevDisplay || ""; delete b.dataset.prevDisplay; });
+
       const link = document.createElement("a");
       link.download = "my-club-schedule.png";
       link.href = dataUrl;

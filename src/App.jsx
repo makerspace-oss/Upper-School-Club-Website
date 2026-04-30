@@ -218,6 +218,25 @@ export default function App() {
                   <p className="app-empty">No clubs match your search or filters.</p>
                 ) : (
                   <>
+                    {!loading && (
+                      <div className="app-results__meta">
+                        <span className="app-results__count">
+                          Showing <strong>{visibleClubs.length}</strong> of <strong>{filteredClubs.length}</strong> club{filteredClubs.length === 1 ? "" : "s"}
+                          {(searchQuery || selectedTags.length > 0) && (
+                            <span className="app-results__count-total"> &middot; {sourceClubs.filter((c) => c.Status === "Active").length} total</span>
+                          )}
+                        </span>
+                        {(searchQuery || selectedTags.length > 0) && (
+                          <button
+                            type="button"
+                            className="app-results__clear"
+                            onClick={() => { setSearchQuery(""); setSelectedTags([]); }}
+                          >
+                            Clear filters
+                          </button>
+                        )}
+                      </div>
+                    )}
                     <div className="club-grid" role="list">
                       {visibleClubs.map((club) => (
                         <div key={club.id} className="club-grid__item" role="listitem">

@@ -6,7 +6,7 @@ function getTags(tagsString) {
   return tagsString.split(",").map((t) => t.trim()).filter(Boolean);
 }
 
-function ClubModal({ club, isOnSchedule, onAddToSchedule, onRemoveFromSchedule, onClose }) {
+export function ClubModal({ club, isOnSchedule, onAddToSchedule, onRemoveFromSchedule, onClose }) {
   const [closing, setClosing] = useState(false);
   const [added, setAdded] = useState(false);
   const tags = getTags(club.Club_Tags);

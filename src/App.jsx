@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { Routes, Route, Link, useLocation } from "react-router-dom";
+import { Routes, Route, Link, useLocation, useNavigate } from "react-router-dom";
 import { clubs as fallbackClubs, getAllTags } from "./data/clubs";
 import { ClubCard } from "./components/ClubCard";
 import { SearchAndFilter } from "./components/SearchAndFilter";
@@ -7,38 +7,29 @@ import { SchedulePage } from "./pages/SchedulePage";
 import { fetchClubsFromSheet } from "./lib/googleSheetClient";
 import "./App.css";
 
-function getSearchParam(name) {
-  return new URLSearchParams(window.location.search).get(name);
-}
-
-function setSearchParam(name, value) {
-  const u = new URL(window.location.href);
-  if (value) {
-    u.searchParams.set(name, value);
-  } else {
-    u.searchParams.delete(name);
-  }
-  window.history.replaceState({}, "", u.toString());
-}
 
 export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState([]);
-  const [expandedId, setExpandedId] = useState(() => getSearchParam("club") || null);
   const [visibleCount, setVisibleCount] = useState(9);
   const [sheetClubs, setSheetClubs] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [scheduleClubs, setScheduleClubs] = useState([]);
+  const [scheduleClubs, setScheduleClubs] = useState(() => {
+    try {
+      const saved = localStorage.getItem("scheduleClubs");
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
 
   const location = useLocation();
+  const navigate = useNavigate();
 
   const allTags = useMemo(() => getAllTags(), []);
 
   useEffect(() => {
-    if (expandedId) setSearchParam("club", expandedId);
-    else setSearchParam("club", "");
-  }, [expandedId]);
+    localStorage.setItem("scheduleClubs", JSON.stringify(scheduleClubs));
+  }, [scheduleClubs]);
 
   // Load clubs from Google Sheets, fall back to local data.
   useEffect(() => {
@@ -77,6 +68,28 @@ export default function App() {
     return fallbackClubs;
   }, [sheetClubs]);
 
+  // Decode shared schedule from URL (?s=base64)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const encoded = params.get("s");
+    if (!encoded || sourceClubs.length === 0) return;
+    try {
+      const ids = atob(encoded).split(",").filter(Boolean);
+      const clubMap = new Map(sourceClubs.map((c) => [c.id, c]));
+      const shared = ids.map((id) => clubMap.get(id)).filter(Boolean);
+      if (shared.length > 0) {
+        setScheduleClubs(shared);
+        // Clean the URL param and navigate to schedule
+        const url = new URL(window.location.href);
+        url.searchParams.delete("s");
+        window.history.replaceState({}, "", url.pathname);
+        navigate("/schedule");
+      }
+    } catch (e) {
+      console.error("[Share] Failed to decode shared schedule:", e);
+    }
+  }, [sourceClubs, navigate]);
+
   const filteredClubs = useMemo(() => {
     let list = sourceClubs.filter((c) => c.Status === "Active");
     const q = searchQuery.trim().toLowerCase();
@@ -107,10 +120,6 @@ export default function App() {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
-  }, []);
-
-  const handleCardToggle = useCallback((clubId) => {
-    setExpandedId((prev) => (prev === clubId ? null : clubId));
   }, []);
 
   const addToSchedule = useCallback((club) => {
@@ -214,9 +223,8 @@ export default function App() {
                         <div key={club.id} className="club-grid__item" role="listitem">
                           <ClubCard
                             club={club}
-                            isExpanded={expandedId === club.id}
-                            onToggle={() => handleCardToggle(club.id)}
                             onAddToSchedule={addToSchedule}
+                            onRemoveFromSchedule={removeFromSchedule}
                             isOnSchedule={scheduleIds.has(club.id)}
                           />
                         </div>

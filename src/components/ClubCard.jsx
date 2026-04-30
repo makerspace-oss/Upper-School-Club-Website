@@ -1,126 +1,222 @@
-import { useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 
 function getTags(tagsString) {
   if (!tagsString) return [];
-  return tagsString
-    .split(",")
-    .map((t) => t.trim())
-    .filter(Boolean);
+  return tagsString.split(",").map((t) => t.trim()).filter(Boolean);
 }
 
-export function ClubCard({ club, isExpanded, onToggle, onAddToSchedule, isOnSchedule }) {
-  const contentRef = useRef(null);
-
+function ClubModal({ club, isOnSchedule, onAddToSchedule, onRemoveFromSchedule, onClose }) {
+  const [closing, setClosing] = useState(false);
+  const [added, setAdded] = useState(false);
   const tags = getTags(club.Club_Tags);
-  const hasIcon = club.Club_Icon_URL && club.Club_Icon_URL.trim() !== "";
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      onToggle();
-    }
+  // Lock body scroll
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setClosing(true);
+    setTimeout(onClose, 250);
+  }, [onClose]);
+
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e) => { if (e.key === "Escape") handleClose(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [handleClose]);
+
+  const handleAdd = () => {
+    if (isOnSchedule || added) return;
+    setAdded(true);
+    onAddToSchedule(club);
+    // Close modal after a brief moment to show the confirmation
+    setTimeout(() => {
+      setClosing(true);
+      setTimeout(onClose, 250);
+    }, 600);
   };
 
-  return (
-    <article
-      className={`club-card ${isExpanded ? "club-card--expanded" : ""}`}
-      data-club-id={club.id}
+  const hasIcon = club.Club_Icon_URL && club.Club_Icon_URL.trim() !== "";
+
+  return createPortal(
+    <div
+      className={`club-modal__backdrop ${closing ? "club-modal__backdrop--closing" : ""}`}
+      onClick={handleClose}
     >
-      <button
-        type="button"
-        className="club-card__trigger"
-        onClick={onToggle}
-        onKeyDown={handleKeyDown}
-        aria-expanded={isExpanded}
-        aria-controls={`club-content-${club.id}`}
-        id={`club-trigger-${club.id}`}
+      <div
+        className={`club-modal ${closing ? "club-modal--closing" : ""}`}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={club.Club_Name}
       >
-        <div className="club-card__header">
-          <div className="club-card__icon" aria-hidden="true">
+        <button type="button" className="club-modal__close" onClick={handleClose} aria-label="Close">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        </button>
+
+        <div className="club-modal__header">
+          <div className="club-modal__icon" aria-hidden="true">
             {hasIcon ? (
-              <img
-                src={club.Club_Icon_URL}
-                alt=""
-                loading="lazy"
-                className="club-card__icon-img"
-              />
+              <img src={club.Club_Icon_URL} alt="" className="club-modal__icon-img" />
             ) : (
-              <span className="club-card__icon-fallback">
-                {club.Club_Name.charAt(0)}
-              </span>
+              <span className="club-modal__icon-fallback">{club.Club_Name.charAt(0)}</span>
             )}
           </div>
-          <div className="club-card__title-wrap">
-            <h2 className="club-card__title">{club.Club_Name}</h2>
+          <div className="club-modal__title-area">
+            <h2 className="club-modal__title">{club.Club_Name}</h2>
             {tags.length > 0 && (
-              <div className="club-card__tags" role="list">
+              <div className="club-modal__tags">
                 {tags.map((tag) => (
-                  <span key={tag} className="club-card__tag" role="listitem">
-                    {tag}
-                  </span>
+                  <span key={tag} className="club-modal__tag">{tag}</span>
                 ))}
               </div>
             )}
           </div>
-          <span className="club-card__chevron" aria-hidden="true">
-            {isExpanded ? "−" : "+"}
-          </span>
         </div>
-      </button>
 
-      <div
-        id={`club-content-${club.id}`}
-        className="club-card__content-wrap"
-        role="region"
-        aria-labelledby={`club-trigger-${club.id}`}
-        hidden={!isExpanded}
-      >
-        <div ref={contentRef} className="club-card__content">
-          {club.Club_Description && (
-            <p className="club-card__description">{club.Club_Description}</p>
-          )}
+        {club.Club_Description && (
+          <p className="club-modal__description">{club.Club_Description}</p>
+        )}
+
+        <div className="club-modal__details">
           {club.Leadership && (
-            <p className="club-card__meta">
-              <strong>Leadership:</strong> {club.Leadership}
-            </p>
+            <div className="club-modal__detail">
+              <span className="club-modal__detail-label">Leadership</span>
+              <span className="club-modal__detail-value">{club.Leadership}</span>
+            </div>
           )}
           {club.Club_Proctors && (
-            <p className="club-card__meta">
-              <strong>Student Leaders:</strong> {club.Club_Proctors}
-            </p>
+            <div className="club-modal__detail">
+              <span className="club-modal__detail-label">Student Leaders</span>
+              <span className="club-modal__detail-value">{club.Club_Proctors}</span>
+            </div>
           )}
           {club.Meet_Days && (
-            <p className="club-card__meta">
-              <strong>Meeting Day:</strong> {club.Meet_Days}
-            </p>
+            <div className="club-modal__detail">
+              <span className="club-modal__detail-label">Meeting Day</span>
+              <span className="club-modal__detail-value">{club.Meet_Days}</span>
+            </div>
           )}
           {club.Notes && (
-            <p className="club-card__meta">
-              <strong>Notes:</strong> {club.Notes}
-            </p>
-          )}
-          {tags.length > 0 && (
-            <p className="club-card__meta">
-              <strong>Tags:</strong> {tags.join(", ")}
-            </p>
-          )}
-          {onAddToSchedule && (
-            <div className="club-card__actions">
-              <button
-                type="button"
-                className="club-card__schedule-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAddToSchedule(club);
-                }}
-                disabled={isOnSchedule}
-              >
-                {isOnSchedule ? "On schedule" : "Add to Sample Schedule"}
-              </button>
+            <div className="club-modal__detail">
+              <span className="club-modal__detail-label">Notes</span>
+              <span className="club-modal__detail-value">{club.Notes}</span>
             </div>
           )}
         </div>
+
+        {onAddToSchedule && (
+          <div className="club-modal__footer">
+            {added ? (
+              <button type="button" className="club-modal__add-btn club-modal__add-btn--added" disabled>
+                <svg className="club-modal__check" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M4 9.5l3.5 3.5L14 5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Added to Schedule
+              </button>
+            ) : isOnSchedule ? (
+              <div className="club-modal__footer-row">
+                <button type="button" className="club-modal__add-btn club-modal__add-btn--added" disabled>
+                  <svg className="club-modal__check" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <path d="M4 9.5l3.5 3.5L14 5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  On Schedule
+                </button>
+                <button
+                  type="button"
+                  className="club-modal__remove-btn"
+                  onClick={() => {
+                    onRemoveFromSchedule(club.id);
+                    setClosing(true);
+                    setTimeout(onClose, 250);
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <button type="button" className="club-modal__add-btn" onClick={handleAdd}>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M9 3v12M3 9h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+                Add to Schedule
+              </button>
+            )}
+          </div>
+        )}
       </div>
-    </article>
+    </div>,
+    document.body
+  );
+}
+
+export function ClubCard({ club, onAddToSchedule, onRemoveFromSchedule, isOnSchedule }) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const tags = getTags(club.Club_Tags);
+  const hasIcon = club.Club_Icon_URL && club.Club_Icon_URL.trim() !== "";
+
+  return (
+    <>
+      <article className={`club-card${isOnSchedule ? " club-card--scheduled" : ""}`} data-club-id={club.id}>
+        <button
+          type="button"
+          className="club-card__trigger"
+          onClick={() => setModalOpen(true)}
+          aria-haspopup="dialog"
+        >
+          <div className="club-card__header">
+            <div className="club-card__icon" aria-hidden="true">
+              {hasIcon ? (
+                <img src={club.Club_Icon_URL} alt="" loading="lazy" className="club-card__icon-img" />
+              ) : (
+                <span className="club-card__icon-fallback">{club.Club_Name.charAt(0)}</span>
+              )}
+            </div>
+            <div className="club-card__title-wrap">
+              <h2 className="club-card__title">{club.Club_Name}</h2>
+              {tags.length > 0 && (
+                <div className="club-card__tags" role="list">
+                  {tags.map((tag) => (
+                    <span key={tag} className="club-card__tag" role="listitem">{tag}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+            {isOnSchedule ? (
+              <span className="club-card__badge" aria-label="On schedule">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M3.5 8.5l3 3L12.5 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </span>
+            ) : (
+              <span className="club-card__arrow" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </span>
+            )}
+          </div>
+        </button>
+      </article>
+
+      {modalOpen && (
+        <ClubModal
+          club={club}
+          isOnSchedule={isOnSchedule}
+          onAddToSchedule={onAddToSchedule}
+          onRemoveFromSchedule={onRemoveFromSchedule}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
+    </>
   );
 }

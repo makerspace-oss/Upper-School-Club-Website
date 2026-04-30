@@ -31,8 +31,9 @@ export default async function handler(req, res) {
     const client = await auth.getClient();
     const token = await client.getAccessToken();
 
-    // Fetch all rows from Sheet1
-    const range = encodeURIComponent("Sheet1");
+    // Fetch all rows from the "Public Clubs 2026-2027" tab.
+    // Tab names with spaces or special chars must be wrapped in single quotes per the Sheets API.
+    const range = encodeURIComponent("'Public Clubs 2026-2027'");
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEET_ID}/values/${range}`;
 
     const response = await fetch(url, {

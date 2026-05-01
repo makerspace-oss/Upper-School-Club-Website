@@ -350,13 +350,11 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
       const GREEN = "#3f7f5c";
       const BLUE = "#2c5f8a";
       const GREEN_WK = "#2d6a4f";
-      const SHIPLEY_LOGO_URL = "https://images.squarespace-cdn.com/content/v1/601586a260bac64bcb51fcdc/1621025263615-E7GTWIJFVTLA16ZMDNP3/Shipley_Inst_H_wTxt_fulclr_RGB+%281%29.png";
-
-      // Convert the logo to a data URL so html-to-image can render it
-      // (cross-origin images would otherwise be blank in the PNG due to CORS)
-      let SHIPLEY_LOGO = SHIPLEY_LOGO_URL;
+      // Bundled local logo — same-origin so html-to-image can render it on the canvas.
+      // Convert to a data URL anyway as a belt-and-suspenders measure for older browsers.
+      let SHIPLEY_LOGO = "/shipley-logo.png";
       try {
-        const res = await fetch(SHIPLEY_LOGO_URL, { mode: "cors" });
+        const res = await fetch(SHIPLEY_LOGO);
         const blob = await res.blob();
         SHIPLEY_LOGO = await new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -365,7 +363,7 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
           reader.readAsDataURL(blob);
         });
       } catch (err) {
-        console.warn("[Export] Could not inline Shipley logo, falling back to URL:", err);
+        console.warn("[Export] Could not inline logo, using URL:", err);
       }
 
       const blueGrid = buildDayGrid(scheduleClubs, "Blue", dayOverrides);

@@ -143,7 +143,7 @@ export default function App() {
       <nav className="app-nav">
         <Link to="/" className="app-nav__brand">
           <img
-            src="https://images.squarespace-cdn.com/content/v1/601586a260bac64bcb51fcdc/1621025263615-E7GTWIJFVTLA16ZMDNP3/Shipley_Inst_H_wTxt_fulclr_RGB+%281%29.png"
+            src="/shipley-logo.png"
             alt="The Shipley School"
             className="app-nav__logo"
           />
@@ -285,7 +285,7 @@ export default function App() {
 
               <footer className="app-footer">
                 <img
-                  src="https://images.squarespace-cdn.com/content/v1/601586a260bac64bcb51fcdc/1621025263615-E7GTWIJFVTLA16ZMDNP3/Shipley_Inst_H_wTxt_fulclr_RGB+%281%29.png"
+                  src="/shipley-logo.png"
                   alt="The Shipley School"
                   className="app-footer__logo"
                 />

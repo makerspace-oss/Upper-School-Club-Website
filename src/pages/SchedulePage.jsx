@@ -219,25 +219,37 @@ function WeekGrid({ weekType, clubs, allClubs, scheduleIds, overrides, onRemove,
 
   return (
     <div className={`week-grid week-grid--${weekType.toLowerCase()}`}>
-      <div className="week-grid__header" style={{ background: color }}>
-        <span className="week-grid__header-label">{weekType} Week</span>
-        {overlaps.length > 0 && (
-          <span className="week-grid__header-badge">
-            {overlaps.length} overlap{overlaps.length > 1 ? "s" : ""}
-          </span>
-        )}
+      {/* Header strip: week label on left + day headers across */}
+      <div className="week-grid__strip" style={{ background: color }}>
+        <div className="week-grid__strip-label">
+          {weekType} Week
+          {overlaps.length > 0 && (
+            <span className="week-grid__header-badge">
+              {overlaps.length} overlap{overlaps.length > 1 ? "s" : ""}
+            </span>
+          )}
+        </div>
+        {DAYS.map((day) => (
+          <div key={day} className="week-grid__strip-day">{day}</div>
+        ))}
       </div>
 
-      <div className="week-grid__days">
+      {/* Body: Flex Period pill on left + day cells across */}
+      <div className="week-grid__body">
+        <div className="week-grid__period-cell">
+          <span className="week-grid__period-pill" style={{ color: color }}>
+            <span className="week-grid__period-dot" style={{ background: color }} />
+            Flex Period
+          </span>
+        </div>
         {DAYS.map((day, dayIdx) => {
           const dayClubs = grid[dayIdx] || [];
           const hasOverlap = overlapDays.has(dayIdx);
           return (
-            <div key={day} className={`week-grid__day${hasOverlap ? " week-grid__day--overlap" : ""}`}>
-              <div className="week-grid__day-label" style={{ background: color }}>{day}</div>
+            <div key={day} data-day={day} className={`week-grid__day${hasOverlap ? " week-grid__day--overlap" : ""}`}>
               <div className="week-grid__day-clubs">
                 {dayClubs.length === 0 && (
-                  <span className="week-grid__day-empty">—</span>
+                  <span className="week-grid__day-empty" aria-hidden="true" />
                 )}
                 {dayClubs.map((club) => (
                   <div
@@ -247,7 +259,6 @@ function WeekGrid({ weekType, clubs, allClubs, scheduleIds, overrides, onRemove,
                     onClick={hasOverlap ? () => { setModalClub(club); setModalDayIdx(dayIdx); } : undefined}
                     title={hasOverlap ? "Click to resolve overlap" : club.Club_Name}
                   >
-                    <span className="week-grid__event-time">Flex</span>
                     <span className="week-grid__event-name">{club.Club_Name}</span>
                     <button
                       type="button"
@@ -339,7 +350,23 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
       const GREEN = "#3f7f5c";
       const BLUE = "#2c5f8a";
       const GREEN_WK = "#2d6a4f";
-      const SHIPLEY_LOGO = "https://images.squarespace-cdn.com/content/v1/601586a260bac64bcb51fcdc/1621025263615-E7GTWIJFVTLA16ZMDNP3/Shipley_Inst_H_wTxt_fulclr_RGB+%281%29.png";
+      const SHIPLEY_LOGO_URL = "https://images.squarespace-cdn.com/content/v1/601586a260bac64bcb51fcdc/1621025263615-E7GTWIJFVTLA16ZMDNP3/Shipley_Inst_H_wTxt_fulclr_RGB+%281%29.png";
+
+      // Convert the logo to a data URL so html-to-image can render it
+      // (cross-origin images would otherwise be blank in the PNG due to CORS)
+      let SHIPLEY_LOGO = SHIPLEY_LOGO_URL;
+      try {
+        const res = await fetch(SHIPLEY_LOGO_URL, { mode: "cors" });
+        const blob = await res.blob();
+        SHIPLEY_LOGO = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch (err) {
+        console.warn("[Export] Could not inline Shipley logo, falling back to URL:", err);
+      }
 
       const blueGrid = buildDayGrid(scheduleClubs, "Blue", dayOverrides);
       const greenGrid = buildDayGrid(scheduleClubs, "Green", dayOverrides);
@@ -510,15 +537,33 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
       ) : (
         <>
           <div className="schedule-page__actions">
-            <button type="button" className="schedule-page__share-btn" onClick={handleShare}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <circle cx="12" cy="3" r="2" stroke="currentColor" strokeWidth="1.5"/>
-                <circle cx="4" cy="8" r="2" stroke="currentColor" strokeWidth="1.5"/>
-                <circle cx="12" cy="13" r="2" stroke="currentColor" strokeWidth="1.5"/>
-                <path d="M5.8 7l4.4-3M5.8 9l4.4 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-              {copied ? "Link Copied!" : "Share"}
-            </button>
+            <div className="schedule-page__share-group">
+              <button type="button" className="schedule-page__share-btn" onClick={handleShare}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="3" r="2" stroke="currentColor" strokeWidth="1.5"/>
+                  <circle cx="4" cy="8" r="2" stroke="currentColor" strokeWidth="1.5"/>
+                  <circle cx="12" cy="13" r="2" stroke="currentColor" strokeWidth="1.5"/>
+                  <path d="M5.8 7l4.4-3M5.8 9l4.4 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+                {copied ? "Link Copied!" : "Share"}
+              </button>
+              <span
+                className="schedule-page__share-info"
+                tabIndex={0}
+                role="button"
+                aria-label="What does Share do?"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5"/>
+                  <circle cx="8" cy="4.75" r="0.9" fill="currentColor"/>
+                  <path d="M8 7.25v4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+                <span className="schedule-page__share-tooltip" role="tooltip">
+                  <strong>Share with friends</strong>
+                  Click <em>Share</em> to copy a link to your clipboard. Anyone who opens it will see your exact club schedule — no account or login needed.
+                </span>
+              </span>
+            </div>
             <button type="button" className="schedule-page__export-btn" onClick={handleExport}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path d="M8 1v9m0 0L5 7m3 3l3-3M2 12v1.5A1.5 1.5 0 003.5 15h9a1.5 1.5 0 001.5-1.5V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -538,6 +583,33 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
               {hasOverlaps ? "Fix Overlaps First" : "Finalize List"}
             </button>
           </div>
+
+          <ul className="schedule-page__tips" aria-label="Schedule features">
+            <li className="schedule-page__tip">
+              <span className="schedule-page__tip-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 4v4l3 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5"/></svg>
+              </span>
+              <span><strong>Plan</strong> across Blue and Green weeks</span>
+            </li>
+            <li className="schedule-page__tip">
+              <span className="schedule-page__tip-icon schedule-page__tip-icon--warn" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1l7 13H1L8 1z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M8 6v3M8 11.5v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </span>
+              <span><strong>Click pulsing clubs</strong> to fix overlaps</span>
+            </li>
+            <li className="schedule-page__tip">
+              <span className="schedule-page__tip-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="12" cy="3" r="2" stroke="currentColor" strokeWidth="1.5"/><circle cx="4" cy="8" r="2" stroke="currentColor" strokeWidth="1.5"/><circle cx="12" cy="13" r="2" stroke="currentColor" strokeWidth="1.5"/><path d="M5.8 7l4.4-3M5.8 9l4.4 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </span>
+              <span><strong>Share</strong> your schedule with friends</span>
+            </li>
+            <li className="schedule-page__tip">
+              <span className="schedule-page__tip-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.5 3.5L13 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </span>
+              <span><strong>Finalize</strong> to copy your final list</span>
+            </li>
+          </ul>
 
           <div ref={scheduleRef} className="schedule-page__grids">
             <WeekGrid weekType="Blue" clubs={scheduleClubs} allClubs={allClubs} scheduleIds={scheduleIds} overrides={dayOverrides} onRemove={onRemove} onMoveDay={handleMoveDay} onSwap={handleSwap} color="#2c5f8a" />

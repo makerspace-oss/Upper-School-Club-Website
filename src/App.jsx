@@ -191,14 +191,30 @@ export default function App() {
               <header className="app-hero">
                 <div className="app-hero__overlay" />
                 <div className="app-hero__content">
-                  <h1 className="app-hero__title">Upper School Clubs & Activities</h1>
+                  <span className="app-hero__eyebrow">Upper School Clubs</span>
+                  <h1 className="app-hero__title">Find Your People. Build Your Year.</h1>
                   <p className="app-hero__subtitle">
-                    Discover clubs, activities, and affinity groups at Shipley. Click a card to learn more.
+                    Browse every club, activity, and affinity group at Shipley. Tap a card to learn more, build a custom schedule for the Blue and Green weeks, and share your picks with friends.
                   </p>
+                  <div className="app-hero__ctas">
+                    <a href="#clubs" className="app-hero__cta app-hero__cta--primary">
+                      Browse clubs
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                        <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </a>
+                    <Link to="/schedule" className="app-hero__cta app-hero__cta--secondary">
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                        <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+                        <path d="M1.5 5.5h11M4 1v3M10 1v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                      </svg>
+                      View schedule
+                    </Link>
+                  </div>
                 </div>
               </header>
 
-              <div className="app-body">
+              <div className="app-body" id="clubs">
 
               <SearchAndFilter
                 searchQuery={searchQuery}

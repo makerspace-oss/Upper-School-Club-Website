@@ -1,44 +1,54 @@
 export function SearchAndFilter({ searchQuery, onSearchChange, selectedTags, allTags, onTagToggle }) {
   return (
     <div className="search-and-filter">
-      <label htmlFor="club-search" className="search-and-filter__label">
-        Search clubs
-      </label>
-      <input
-        id="club-search"
-        type="search"
-        className="search-and-filter__input"
-        placeholder="Type a club name…"
-        value={searchQuery}
-        onChange={(e) => onSearchChange(e.target.value)}
-        autoComplete="off"
-        aria-describedby="club-search-desc"
-      />
-      <p id="club-search-desc" className="sr-only">
-        Filters the list of clubs below by name.
-      </p>
+      <div className="search-and-filter__search">
+        <svg className="search-and-filter__search-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+          <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.75"/>
+          <path d="M12 12l4 4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/>
+        </svg>
+        <input
+          id="club-search"
+          type="search"
+          className="search-and-filter__input"
+          placeholder="Search by club name…"
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          autoComplete="off"
+          aria-label="Search clubs by name"
+        />
+        {searchQuery && (
+          <button
+            type="button"
+            className="search-and-filter__clear"
+            onClick={() => onSearchChange("")}
+            aria-label="Clear search"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/>
+            </svg>
+          </button>
+        )}
+      </div>
 
-      <fieldset className="search-and-filter__tags">
-        <legend className="search-and-filter__legend">Filter by category</legend>
-        <div className="search-and-filter__tag-list" role="group">
-          {allTags.map((tag) => (
-            <label
-              key={tag}
-              className={`search-and-filter__tag-label${
-                selectedTags.includes(tag) ? " search-and-filter__tag-label--selected" : ""
-              }`}
-            >
-              <input
-                type="checkbox"
-                checked={selectedTags.includes(tag)}
-                onChange={() => onTagToggle(tag)}
-                className="search-and-filter__checkbox"
-              />
-              <span className="search-and-filter__tag-text">{tag}</span>
-            </label>
-          ))}
+      <div className="search-and-filter__tag-row" role="group" aria-label="Filter by category">
+        <span className="search-and-filter__tag-label-prefix">Categories</span>
+        <div className="search-and-filter__tag-scroll">
+          {allTags.map((tag) => {
+            const selected = selectedTags.includes(tag);
+            return (
+              <button
+                key={tag}
+                type="button"
+                className={`search-and-filter__chip${selected ? " search-and-filter__chip--selected" : ""}`}
+                onClick={() => onTagToggle(tag)}
+                aria-pressed={selected}
+              >
+                {tag}
+              </button>
+            );
+          })}
         </div>
-      </fieldset>
+      </div>
     </div>
   );
 }

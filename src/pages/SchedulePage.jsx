@@ -219,25 +219,37 @@ function WeekGrid({ weekType, clubs, allClubs, scheduleIds, overrides, onRemove,
 
   return (
     <div className={`week-grid week-grid--${weekType.toLowerCase()}`}>
-      <div className="week-grid__header" style={{ background: color }}>
-        <span className="week-grid__header-label">{weekType} Week</span>
-        {overlaps.length > 0 && (
-          <span className="week-grid__header-badge">
-            {overlaps.length} overlap{overlaps.length > 1 ? "s" : ""}
-          </span>
-        )}
+      {/* Header strip: week label on left + day headers across */}
+      <div className="week-grid__strip" style={{ background: color }}>
+        <div className="week-grid__strip-label">
+          {weekType} Week
+          {overlaps.length > 0 && (
+            <span className="week-grid__header-badge">
+              {overlaps.length} overlap{overlaps.length > 1 ? "s" : ""}
+            </span>
+          )}
+        </div>
+        {DAYS.map((day) => (
+          <div key={day} className="week-grid__strip-day">{day}</div>
+        ))}
       </div>
 
-      <div className="week-grid__days">
+      {/* Body: Flex Period pill on left + day cells across */}
+      <div className="week-grid__body">
+        <div className="week-grid__period-cell">
+          <span className="week-grid__period-pill" style={{ color: color }}>
+            <span className="week-grid__period-dot" style={{ background: color }} />
+            Flex Period
+          </span>
+        </div>
         {DAYS.map((day, dayIdx) => {
           const dayClubs = grid[dayIdx] || [];
           const hasOverlap = overlapDays.has(dayIdx);
           return (
-            <div key={day} className={`week-grid__day${hasOverlap ? " week-grid__day--overlap" : ""}`}>
-              <div className="week-grid__day-label" style={{ background: color }}>{day}</div>
+            <div key={day} data-day={day} className={`week-grid__day${hasOverlap ? " week-grid__day--overlap" : ""}`}>
               <div className="week-grid__day-clubs">
                 {dayClubs.length === 0 && (
-                  <span className="week-grid__day-empty">—</span>
+                  <span className="week-grid__day-empty" aria-hidden="true" />
                 )}
                 {dayClubs.map((club) => (
                   <div
@@ -247,7 +259,6 @@ function WeekGrid({ weekType, clubs, allClubs, scheduleIds, overrides, onRemove,
                     onClick={hasOverlap ? () => { setModalClub(club); setModalDayIdx(dayIdx); } : undefined}
                     title={hasOverlap ? "Click to resolve overlap" : club.Club_Name}
                   >
-                    <span className="week-grid__event-time">Flex</span>
                     <span className="week-grid__event-name">{club.Club_Name}</span>
                     <button
                       type="button"
@@ -572,6 +583,33 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
               {hasOverlaps ? "Fix Overlaps First" : "Finalize List"}
             </button>
           </div>
+
+          <ul className="schedule-page__tips" aria-label="Schedule features">
+            <li className="schedule-page__tip">
+              <span className="schedule-page__tip-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 4v4l3 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5"/></svg>
+              </span>
+              <span><strong>Plan</strong> across Blue and Green weeks</span>
+            </li>
+            <li className="schedule-page__tip">
+              <span className="schedule-page__tip-icon schedule-page__tip-icon--warn" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1l7 13H1L8 1z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M8 6v3M8 11.5v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </span>
+              <span><strong>Click pulsing clubs</strong> to fix overlaps</span>
+            </li>
+            <li className="schedule-page__tip">
+              <span className="schedule-page__tip-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="12" cy="3" r="2" stroke="currentColor" strokeWidth="1.5"/><circle cx="4" cy="8" r="2" stroke="currentColor" strokeWidth="1.5"/><circle cx="12" cy="13" r="2" stroke="currentColor" strokeWidth="1.5"/><path d="M5.8 7l4.4-3M5.8 9l4.4 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </span>
+              <span><strong>Share</strong> your schedule with friends</span>
+            </li>
+            <li className="schedule-page__tip">
+              <span className="schedule-page__tip-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.5 3.5L13 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </span>
+              <span><strong>Finalize</strong> to copy your final list</span>
+            </li>
+          </ul>
 
           <div ref={scheduleRef} className="schedule-page__grids">
             <WeekGrid weekType="Blue" clubs={scheduleClubs} allClubs={allClubs} scheduleIds={scheduleIds} overrides={dayOverrides} onRemove={onRemove} onMoveDay={handleMoveDay} onSwap={handleSwap} color="#2c5f8a" />

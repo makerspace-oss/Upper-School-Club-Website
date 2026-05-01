@@ -344,68 +344,90 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
       const blueGrid = buildDayGrid(scheduleClubs, "Blue", dayOverrides);
       const greenGrid = buildDayGrid(scheduleClubs, "Green", dayOverrides);
 
-      const renderWeek = (label, color, grid, accentBg) => `
-        <div style="background:#fff;border:1.5px solid #e4e7ed;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(27,42,74,0.06);">
-          <div style="background:${color};padding:14px 20px;text-align:center;">
-            <span style="font-family:'DM Sans',system-ui,sans-serif;font-size:15px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:0.08em;">${label} Week</span>
+      // Renders one row in the day-headers strip + one row of cells beneath
+      const renderWeek = (label, color, grid, accentBg) => {
+        const headerRow = `
+          <div style="display:grid;grid-template-columns:140px repeat(5,1fr);align-items:stretch;background:${color};color:#fff;">
+            <div style="padding:14px 18px;display:flex;align-items:center;font-family:'DM Sans',system-ui,sans-serif;font-size:13px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;border-right:1px solid rgba(255,255,255,0.18);">
+              ${label} Week
+            </div>
+            ${DAYS.map((d, i) => `
+              <div style="padding:14px 8px;text-align:center;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;${i === DAYS.length - 1 ? "" : "border-right:1px solid rgba(255,255,255,0.18);"}">${d}</div>
+            `).join("")}
           </div>
-          <div style="display:grid;grid-template-columns:repeat(5,1fr);">
+        `;
+        const bodyRow = `
+          <div style="display:grid;grid-template-columns:140px repeat(5,1fr);background:#fff;">
+            <div style="padding:18px;display:flex;align-items:center;background:#f7f8fa;border-right:1px solid #e4e7ed;">
+              <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:#fff;border:1px solid #e4e7ed;border-radius:999px;font-size:10px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:0.08em;">
+                <span style="width:6px;height:6px;border-radius:50%;background:${color};display:inline-block;"></span>
+                Flex Period
+              </span>
+            </div>
             ${DAYS.map((day, dayIdx) => {
               const clubs = grid[dayIdx] || [];
+              const isLast = dayIdx === DAYS.length - 1;
               return `
-                <div style="border-right:1px solid #e4e7ed;${dayIdx === DAYS.length - 1 ? 'border-right:none;' : ''}">
-                  <div style="background:${color};padding:10px 6px;text-align:center;font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid rgba(255,255,255,0.15);">${day}</div>
-                  <div style="padding:10px;min-height:90px;display:flex;flex-direction:column;gap:8px;">
-                    ${clubs.length === 0 ? `<span style="color:#ccd1da;text-align:center;font-size:13px;padding:14px 0;">—</span>` : clubs.map((c) => `
-                      <div style="background:${accentBg};border:1px solid #e4e7ed;border-left:3px solid ${color};border-radius:6px;padding:8px 10px;">
-                        <div style="display:inline-block;font-size:9px;font-weight:800;color:#8b95a8;text-transform:uppercase;letter-spacing:0.08em;background:#fff;border:1px solid #e4e7ed;padding:2px 7px;border-radius:3px;line-height:1.2;margin-bottom:4px;">Flex</div>
-                        <div style="font-weight:600;color:${NAVY};font-size:13px;line-height:1.35;word-break:break-word;">${escapeHtml(c.Club_Name)}</div>
+                <div style="padding:12px;border-right:${isLast ? "none" : "1px solid #e4e7ed"};display:flex;flex-direction:column;gap:8px;min-height:96px;">
+                  ${clubs.length === 0
+                    ? `<div style="flex:1;display:flex;align-items:center;justify-content:center;"><span style="display:block;width:24px;height:2px;background:#e4e7ed;border-radius:2px;"></span></div>`
+                    : clubs.map((c) => `
+                      <div style="background:${accentBg};border:1px solid ${accentBg === "#eef4f9" ? "#d4e3ee" : "#d4e7d9"};border-left:3px solid ${color};border-radius:8px;padding:9px 11px;">
+                        <div style="font-weight:700;color:${NAVY};font-size:12.5px;line-height:1.35;word-break:break-word;">${escapeHtml(c.Club_Name)}</div>
                       </div>
                     `).join("")}
-                  </div>
                 </div>
               `;
             }).join("")}
           </div>
-        </div>
-      `;
+        `;
+        return `
+          <div style="border:1.5px solid #e4e7ed;border-radius:14px;overflow:hidden;box-shadow:0 2px 6px rgba(27,42,74,0.06);">
+            ${headerRow}
+            ${bodyRow}
+          </div>
+        `;
+      };
 
       const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
       const html = `
         <div style="
           width:1100px;
-          padding:48px 56px;
-          background:linear-gradient(180deg,#fff 0%,#f7f8fa 100%);
-          font-family:'DM Sans',system-ui,-apple-system,sans-serif;
+          padding:56px 56px 40px;
+          background:#ffffff;
+          font-family:'DM Sans','Helvetica Neue',system-ui,-apple-system,sans-serif;
           color:${NAVY};
           box-sizing:border-box;
         ">
           <!-- Header -->
-          <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:20px;border-bottom:3px solid ${GREEN};margin-bottom:32px;">
-            <div style="display:flex;align-items:center;gap:18px;">
-              <img src="${SHIPLEY_LOGO}" crossorigin="anonymous" style="height:48px;width:auto;" alt="Shipley"/>
-              <div>
-                <div style="font-size:24px;font-weight:800;color:${NAVY};letter-spacing:-0.02em;line-height:1;">My Club Schedule</div>
-                <div style="font-size:13px;color:#4e5668;margin-top:4px;font-weight:500;">Upper School Clubs &amp; Activities &middot; ${scheduleClubs.length} club${scheduleClubs.length === 1 ? "" : "s"}</div>
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:32px;padding-bottom:24px;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;gap:20px;">
+              <img src="${SHIPLEY_LOGO}" crossorigin="anonymous" style="height:54px;width:auto;display:block;" alt="Shipley"/>
+              <div style="border-left:2px solid ${GREEN};padding-left:20px;">
+                <div style="font-size:11px;font-weight:700;color:${GREEN};text-transform:uppercase;letter-spacing:0.14em;margin-bottom:6px;">Upper School</div>
+                <div style="font-size:28px;font-weight:800;color:${NAVY};letter-spacing:-0.02em;line-height:1;">My Club Schedule</div>
               </div>
             </div>
-            <div style="text-align:right;">
-              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8b95a8;font-weight:600;">Generated</div>
-              <div style="font-size:14px;color:${NAVY};font-weight:700;margin-top:2px;">${today}</div>
+            <div style="text-align:right;line-height:1.3;">
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:#8b95a8;font-weight:700;">Generated</div>
+              <div style="font-size:14px;color:${NAVY};font-weight:700;margin-top:3px;">${today}</div>
+              <div style="font-size:11px;color:#8b95a8;margin-top:6px;font-weight:500;">${scheduleClubs.length} club${scheduleClubs.length === 1 ? "" : "s"} selected</div>
             </div>
           </div>
 
+          <div style="height:1px;background:linear-gradient(90deg,${GREEN} 0%,${GREEN} 30%,#e4e7ed 30%,#e4e7ed 100%);margin-bottom:28px;"></div>
+
           <!-- Schedule grids -->
-          <div style="display:flex;flex-direction:column;gap:20px;">
+          <div style="display:flex;flex-direction:column;gap:18px;">
             ${renderWeek("Blue", BLUE, blueGrid, "#eef4f9")}
             ${renderWeek("Green", GREEN_WK, greenGrid, "#edf5f0")}
           </div>
 
           <!-- Footer -->
-          <div style="margin-top:36px;padding-top:18px;border-top:1px solid #e4e7ed;display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:11px;color:#8b95a8;font-weight:500;">The Shipley School &middot; Upper School Clubs</span>
-            <span style="font-size:11px;color:${GREEN};font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Plan &middot; Discover &middot; Connect</span>
+          <div style="margin-top:32px;padding-top:18px;border-top:1px solid #e4e7ed;text-align:center;">
+            <div style="font-style:italic;font-size:13px;color:${GREEN};font-weight:600;letter-spacing:0.01em;">"Courage for the deed, grace for the doing"</div>
+            <div style="font-size:10px;color:#8b95a8;margin-top:8px;text-transform:uppercase;letter-spacing:0.12em;font-weight:600;">The Shipley School &middot; Upper School Clubs</div>
           </div>
         </div>
       `;

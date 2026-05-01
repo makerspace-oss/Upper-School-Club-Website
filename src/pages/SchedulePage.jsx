@@ -339,7 +339,23 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
       const GREEN = "#3f7f5c";
       const BLUE = "#2c5f8a";
       const GREEN_WK = "#2d6a4f";
-      const SHIPLEY_LOGO = "https://images.squarespace-cdn.com/content/v1/601586a260bac64bcb51fcdc/1621025263615-E7GTWIJFVTLA16ZMDNP3/Shipley_Inst_H_wTxt_fulclr_RGB+%281%29.png";
+      const SHIPLEY_LOGO_URL = "https://images.squarespace-cdn.com/content/v1/601586a260bac64bcb51fcdc/1621025263615-E7GTWIJFVTLA16ZMDNP3/Shipley_Inst_H_wTxt_fulclr_RGB+%281%29.png";
+
+      // Convert the logo to a data URL so html-to-image can render it
+      // (cross-origin images would otherwise be blank in the PNG due to CORS)
+      let SHIPLEY_LOGO = SHIPLEY_LOGO_URL;
+      try {
+        const res = await fetch(SHIPLEY_LOGO_URL, { mode: "cors" });
+        const blob = await res.blob();
+        SHIPLEY_LOGO = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch (err) {
+        console.warn("[Export] Could not inline Shipley logo, falling back to URL:", err);
+      }
 
       const blueGrid = buildDayGrid(scheduleClubs, "Blue", dayOverrides);
       const greenGrid = buildDayGrid(scheduleClubs, "Green", dayOverrides);
@@ -510,15 +526,33 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
       ) : (
         <>
           <div className="schedule-page__actions">
-            <button type="button" className="schedule-page__share-btn" onClick={handleShare}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <circle cx="12" cy="3" r="2" stroke="currentColor" strokeWidth="1.5"/>
-                <circle cx="4" cy="8" r="2" stroke="currentColor" strokeWidth="1.5"/>
-                <circle cx="12" cy="13" r="2" stroke="currentColor" strokeWidth="1.5"/>
-                <path d="M5.8 7l4.4-3M5.8 9l4.4 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-              {copied ? "Link Copied!" : "Share"}
-            </button>
+            <div className="schedule-page__share-group">
+              <button type="button" className="schedule-page__share-btn" onClick={handleShare}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="3" r="2" stroke="currentColor" strokeWidth="1.5"/>
+                  <circle cx="4" cy="8" r="2" stroke="currentColor" strokeWidth="1.5"/>
+                  <circle cx="12" cy="13" r="2" stroke="currentColor" strokeWidth="1.5"/>
+                  <path d="M5.8 7l4.4-3M5.8 9l4.4 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+                {copied ? "Link Copied!" : "Share"}
+              </button>
+              <span
+                className="schedule-page__share-info"
+                tabIndex={0}
+                role="button"
+                aria-label="What does Share do?"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5"/>
+                  <circle cx="8" cy="4.75" r="0.9" fill="currentColor"/>
+                  <path d="M8 7.25v4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+                <span className="schedule-page__share-tooltip" role="tooltip">
+                  <strong>Share with friends</strong>
+                  Click <em>Share</em> to copy a link to your clipboard. Anyone who opens it will see your exact club schedule — no account or login needed.
+                </span>
+              </span>
+            </div>
             <button type="button" className="schedule-page__export-btn" onClick={handleExport}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path d="M8 1v9m0 0L5 7m3 3l3-3M2 12v1.5A1.5 1.5 0 003.5 15h9a1.5 1.5 0 001.5-1.5V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>

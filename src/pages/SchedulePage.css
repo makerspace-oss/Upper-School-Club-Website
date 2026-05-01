@@ -89,6 +89,89 @@
 }
 .schedule-page__share-btn:hover { border-color: var(--navy); color: var(--navy); }
 
+/* ── Share info tooltip ── */
+.schedule-page__share-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  position: relative;
+}
+
+.schedule-page__share-info {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--accent);
+  background: rgba(63, 127, 92, 0.08);
+  cursor: help;
+  outline: none;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
+  position: relative;
+}
+
+.schedule-page__share-info:hover,
+.schedule-page__share-info:focus-visible {
+  background: var(--accent);
+  color: var(--white);
+  transform: scale(1.08);
+}
+
+.schedule-page__share-tooltip {
+  position: absolute;
+  bottom: calc(100% + 0.6rem);
+  right: -0.5rem;
+  width: 260px;
+  padding: 0.85rem 1rem;
+  background: var(--navy-dark);
+  color: var(--white);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  font-weight: 500;
+  text-align: left;
+  box-shadow: 0 8px 24px rgba(17, 29, 53, 0.25);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px);
+  transition: opacity 0.15s, transform 0.15s, visibility 0.15s;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.schedule-page__share-tooltip strong {
+  display: block;
+  font-weight: 700;
+  color: var(--accent-light);
+  font-size: 0.8125rem;
+  margin-bottom: 0.3rem;
+  letter-spacing: 0.02em;
+}
+
+.schedule-page__share-tooltip em {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.schedule-page__share-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  right: 0.85rem;
+  border: 6px solid transparent;
+  border-top-color: var(--navy-dark);
+}
+
+.schedule-page__share-info:hover .schedule-page__share-tooltip,
+.schedule-page__share-info:focus-visible .schedule-page__share-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
 .schedule-page__export-btn {
   border: 1.5px solid var(--navy);
   background: var(--white);

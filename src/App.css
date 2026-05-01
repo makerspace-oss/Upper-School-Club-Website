@@ -64,7 +64,7 @@
   right: 0.95rem;
   bottom: -0.65rem;
   height: 3px;
-  background: var(--gold);
+  background: var(--accent);
   border-radius: 2px 2px 0 0;
 }
 
@@ -125,7 +125,7 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 50%, var(--accent) 100%);
   z-index: 2;
 }
 
@@ -184,7 +184,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 50%, var(--accent) 100%);
 }
 
 .app-footer__logo {
@@ -804,7 +804,7 @@
 }
 
 .app-results__more-button:focus-visible {
-  outline: 2px solid var(--gold);
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 

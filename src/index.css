@@ -9,8 +9,12 @@
   --navy: #1b2a4a;
   --navy-light: #2c3e6b;
   --navy-dark: #111d35;
-  --gold: #c8a44e;
-  --gold-light: #dfc377;
+  /* Shipley green (from the school crest) — used for accent strips and highlights */
+  --accent: #3f7f5c;
+  --accent-light: #5fa07d;
+  /* Legacy aliases kept in case anything still references them */
+  --gold: var(--accent);
+  --gold-light: var(--accent-light);
   --white: #ffffff;
   --off-white: #f7f8fa;
   --gray-50: #f1f3f6;

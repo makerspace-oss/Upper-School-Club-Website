@@ -333,49 +333,129 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
   }, [scheduleClubs, dayOverrides]);
 
   const handleExport = useCallback(async () => {
-    if (!scheduleRef.current) return;
     try {
-      const el = scheduleRef.current;
-      const prevStyle = el.getAttribute("style") || "";
-      const prevTransform = el.style.transform;
+      // Build a polished, standalone export layout (independent of the live DOM)
+      const NAVY = "#1b2a4a";
+      const GREEN = "#3f7f5c";
+      const BLUE = "#2c5f8a";
+      const GREEN_WK = "#2d6a4f";
+      const SHIPLEY_LOGO = "https://images.squarespace-cdn.com/content/v1/601586a260bac64bcb51fcdc/1621025263615-E7GTWIJFVTLA16ZMDNP3/Shipley_Inst_H_wTxt_fulclr_RGB+%281%29.png";
 
-      el.style.width = "1100px";
-      el.style.maxWidth = "1100px";
-      el.style.padding = "24px";
-      el.style.background = "#f7f8fa";
-      el.style.borderRadius = "0";
+      const blueGrid = buildDayGrid(scheduleClubs, "Blue", dayOverrides);
+      const greenGrid = buildDayGrid(scheduleClubs, "Green", dayOverrides);
 
-      const removeBtns = Array.from(el.querySelectorAll(".week-grid__event-remove"));
-      removeBtns.forEach((b) => { b.dataset.prevDisplay = b.style.display; b.style.display = "none"; });
+      const renderWeek = (label, color, grid, accentBg) => `
+        <div style="background:#fff;border:1.5px solid #e4e7ed;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(27,42,74,0.06);">
+          <div style="background:${color};padding:14px 20px;text-align:center;">
+            <span style="font-family:'DM Sans',system-ui,sans-serif;font-size:15px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:0.08em;">${label} Week</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);">
+            ${DAYS.map((day, dayIdx) => {
+              const clubs = grid[dayIdx] || [];
+              return `
+                <div style="border-right:1px solid #e4e7ed;${dayIdx === DAYS.length - 1 ? 'border-right:none;' : ''}">
+                  <div style="background:${color};padding:10px 6px;text-align:center;font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid rgba(255,255,255,0.15);">${day}</div>
+                  <div style="padding:10px;min-height:90px;display:flex;flex-direction:column;gap:8px;">
+                    ${clubs.length === 0 ? `<span style="color:#ccd1da;text-align:center;font-size:13px;padding:14px 0;">—</span>` : clubs.map((c) => `
+                      <div style="background:${accentBg};border:1px solid #e4e7ed;border-left:3px solid ${color};border-radius:6px;padding:8px 10px;">
+                        <div style="display:inline-block;font-size:9px;font-weight:800;color:#8b95a8;text-transform:uppercase;letter-spacing:0.08em;background:#fff;border:1px solid #e4e7ed;padding:2px 7px;border-radius:3px;line-height:1.2;margin-bottom:4px;">Flex</div>
+                        <div style="font-weight:600;color:${NAVY};font-size:13px;line-height:1.35;word-break:break-word;">${escapeHtml(c.Club_Name)}</div>
+                      </div>
+                    `).join("")}
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
 
+      const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+
+      const html = `
+        <div style="
+          width:1100px;
+          padding:48px 56px;
+          background:linear-gradient(180deg,#fff 0%,#f7f8fa 100%);
+          font-family:'DM Sans',system-ui,-apple-system,sans-serif;
+          color:${NAVY};
+          box-sizing:border-box;
+        ">
+          <!-- Header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:20px;border-bottom:3px solid ${GREEN};margin-bottom:32px;">
+            <div style="display:flex;align-items:center;gap:18px;">
+              <img src="${SHIPLEY_LOGO}" crossorigin="anonymous" style="height:48px;width:auto;" alt="Shipley"/>
+              <div>
+                <div style="font-size:24px;font-weight:800;color:${NAVY};letter-spacing:-0.02em;line-height:1;">My Club Schedule</div>
+                <div style="font-size:13px;color:#4e5668;margin-top:4px;font-weight:500;">Upper School Clubs &amp; Activities &middot; ${scheduleClubs.length} club${scheduleClubs.length === 1 ? "" : "s"}</div>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8b95a8;font-weight:600;">Generated</div>
+              <div style="font-size:14px;color:${NAVY};font-weight:700;margin-top:2px;">${today}</div>
+            </div>
+          </div>
+
+          <!-- Schedule grids -->
+          <div style="display:flex;flex-direction:column;gap:20px;">
+            ${renderWeek("Blue", BLUE, blueGrid, "#eef4f9")}
+            ${renderWeek("Green", GREEN_WK, greenGrid, "#edf5f0")}
+          </div>
+
+          <!-- Footer -->
+          <div style="margin-top:36px;padding-top:18px;border-top:1px solid #e4e7ed;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:11px;color:#8b95a8;font-weight:500;">The Shipley School &middot; Upper School Clubs</span>
+            <span style="font-size:11px;color:${GREEN};font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Plan &middot; Discover &middot; Connect</span>
+          </div>
+        </div>
+      `;
+
+      // Mount offscreen
+      const container = document.createElement("div");
+      container.style.cssText = "position:fixed;left:-9999px;top:0;z-index:-1;";
+      container.innerHTML = html;
+      document.body.appendChild(container);
+      const exportEl = container.firstElementChild;
+
+      // Wait for the logo image to load (so it appears in the PNG)
+      const img = exportEl.querySelector("img");
+      if (img && !img.complete) {
+        await new Promise((res) => {
+          img.onload = res;
+          img.onerror = res;
+          setTimeout(res, 3000);
+        });
+      }
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-      const width = Math.max(el.scrollWidth, 1100);
-      const height = el.scrollHeight;
-
-      const dataUrl = await toPng(el, {
-        backgroundColor: "#f7f8fa",
-        pixelRatio: 3,
+      const dataUrl = await toPng(exportEl, {
+        backgroundColor: "#ffffff",
+        pixelRatio: 2.5,
         cacheBust: true,
-        width,
-        height,
-        canvasWidth: width * 3,
-        canvasHeight: height * 3,
-        style: { transform: "none" },
+        width: 1100,
+        height: exportEl.scrollHeight,
       });
 
-      el.setAttribute("style", prevStyle);
-      el.style.transform = prevTransform;
-      removeBtns.forEach((b) => { b.style.display = b.dataset.prevDisplay || ""; delete b.dataset.prevDisplay; });
+      document.body.removeChild(container);
 
       const link = document.createElement("a");
-      link.download = "my-club-schedule.png";
+      link.download = `shipley-club-schedule-${today.replace(/[, ]+/g, "-").toLowerCase()}.png`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
       console.error("Failed to export:", err);
     }
-  }, []);
+  }, [scheduleClubs, dayOverrides]);
+
+  // Tiny HTML escaper for export safety
+  function escapeHtml(s) {
+    return String(s || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
 
   const handleShare = useCallback(() => {
     const ids = scheduleClubs.map((c) => c.id).join(",");

@@ -350,11 +350,12 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
       const GREEN = "#3f7f5c";
       const BLUE = "#2c5f8a";
       const GREEN_WK = "#2d6a4f";
-      // Bundled local logo — same-origin so html-to-image can render it on the canvas.
-      // Convert to a data URL anyway as a belt-and-suspenders measure for older browsers.
-      let SHIPLEY_LOGO = "/shipley-logo.png";
+      // Convert the bundled logo to a data URL so html-to-image can paint it
+      // onto the canvas without any CORS / loading-race issues.
+      let SHIPLEY_LOGO = "";
       try {
-        const res = await fetch(SHIPLEY_LOGO);
+        const res = await fetch("/shipley-logo.png", { cache: "force-cache" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const blob = await res.blob();
         SHIPLEY_LOGO = await new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -363,7 +364,7 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
           reader.readAsDataURL(blob);
         });
       } catch (err) {
-        console.warn("[Export] Could not inline logo, using URL:", err);
+        console.warn("[Export] Could not inline logo:", err);
       }
 
       const blueGrid = buildDayGrid(scheduleClubs, "Blue", dayOverrides);
@@ -428,7 +429,7 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
           <!-- Header -->
           <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:32px;padding-bottom:24px;margin-bottom:8px;">
             <div style="display:flex;align-items:center;gap:20px;">
-              <img src="${SHIPLEY_LOGO}" crossorigin="anonymous" style="height:54px;width:auto;display:block;" alt="Shipley"/>
+              ${SHIPLEY_LOGO ? `<img src="${SHIPLEY_LOGO}" style="height:54px;width:auto;display:block;" alt="Shipley"/>` : ""}
               <div style="border-left:2px solid ${GREEN};padding-left:20px;">
                 <div style="font-size:11px;font-weight:700;color:${GREEN};text-transform:uppercase;letter-spacing:0.14em;margin-bottom:6px;">Upper School</div>
                 <div style="font-size:28px;font-weight:800;color:${NAVY};letter-spacing:-0.02em;line-height:1;">My Club Schedule</div>
@@ -464,14 +465,19 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
       document.body.appendChild(container);
       const exportEl = container.firstElementChild;
 
-      // Wait for the logo image to load (so it appears in the PNG)
+      // Wait for the logo image to fully decode (so it appears in the PNG)
       const img = exportEl.querySelector("img");
-      if (img && !img.complete) {
-        await new Promise((res) => {
-          img.onload = res;
-          img.onerror = res;
-          setTimeout(res, 3000);
-        });
+      if (img) {
+        try {
+          await img.decode();
+        } catch {
+          await new Promise((res) => {
+            if (img.complete) return res();
+            img.onload = res;
+            img.onerror = res;
+            setTimeout(res, 2000);
+          });
+        }
       }
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 

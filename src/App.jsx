@@ -6,6 +6,7 @@ import { SearchAndFilter } from "./components/SearchAndFilter";
 import { SchedulePage } from "./pages/SchedulePage";
 import { fetchClubsFromSheet } from "./lib/googleSheetClient";
 import { Analytics } from "@vercel/analytics/react";
+import shipleyLogoUrl from "./assets/shipley-logo.png";
 import "./App.css";
 
 
@@ -143,7 +144,7 @@ export default function App() {
       <nav className="app-nav">
         <Link to="/" className="app-nav__brand">
           <img
-            src="/shipley-logo.png"
+            src={shipleyLogoUrl}
             alt="The Shipley School"
             className="app-nav__logo"
           />
@@ -285,7 +286,7 @@ export default function App() {
 
               <footer className="app-footer">
                 <img
-                  src="/shipley-logo.png"
+                  src={shipleyLogoUrl}
                   alt="The Shipley School"
                   className="app-footer__logo"
                 />

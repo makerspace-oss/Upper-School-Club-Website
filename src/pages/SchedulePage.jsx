@@ -2,7 +2,34 @@ import { useMemo, useRef, useCallback, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { toPng } from "html-to-image";
 import { ClubModal } from "../components/ClubCard";
+import shipleyLogoUrl from "../assets/shipley-logo.png";
 import "./SchedulePage.css";
+
+/**
+ * Pre-fetch the Shipley logo as a data URL once on module load so the
+ * PNG export always has it ready to inline (no network race, no CORS).
+ */
+let CACHED_LOGO_DATA_URL = null;
+async function getLogoDataUrl() {
+  if (CACHED_LOGO_DATA_URL) return CACHED_LOGO_DATA_URL;
+  try {
+    const res = await fetch(shipleyLogoUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const blob = await res.blob();
+    CACHED_LOGO_DATA_URL = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+    return CACHED_LOGO_DATA_URL;
+  } catch (err) {
+    console.warn("[Export] Failed to load Shipley logo:", err);
+    return "";
+  }
+}
+// Warm the cache on module load so the export is fast on first click
+if (typeof window !== "undefined") getLogoDataUrl();
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 const DAY_FULL = {
@@ -350,22 +377,7 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
       const GREEN = "#3f7f5c";
       const BLUE = "#2c5f8a";
       const GREEN_WK = "#2d6a4f";
-      // Convert the bundled logo to a data URL so html-to-image can paint it
-      // onto the canvas without any CORS / loading-race issues.
-      let SHIPLEY_LOGO = "";
-      try {
-        const res = await fetch("/shipley-logo.png", { cache: "force-cache" });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const blob = await res.blob();
-        SHIPLEY_LOGO = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-      } catch (err) {
-        console.warn("[Export] Could not inline logo:", err);
-      }
+      const SHIPLEY_LOGO = await getLogoDataUrl();
 
       const blueGrid = buildDayGrid(scheduleClubs, "Blue", dayOverrides);
       const greenGrid = buildDayGrid(scheduleClubs, "Green", dayOverrides);

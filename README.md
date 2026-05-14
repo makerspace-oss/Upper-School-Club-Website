@@ -1,113 +1,120 @@
-School Clubs Website Development
+School Clubs Website Development\
 First Semester Process Documentation
 
-BEFORE READING ANYTHING BELOW, READ THE START_HERE DOCUMENT IN THE DIRECTORY ABOVE. 
-
-
-
+BEFORE READING ANYTHING BELOW, READ THE `START_HERE` DOCUMENT IN THE DIRECTORY ABOVE. 
 
 Executive Summary
+
 This document outlines the comprehensive process for developing a school clubs website during the first semester. The project aims to create a centralized digital platform where students can discover clubs, learn about their activities and achievements, and make informed decisions about club participation. This initiative addresses the limitations of traditional club fairs by providing year-round access to club information.
+
 1. Project Overview
 1.1 Project Goals
-•   	Create a centralized platform for all school club information
-•   	Improve club visibility and accessibility for students
-•   	Showcase club achievements and activities
-•   	Support new students, new clubs, and those who miss club fairs
-•   	Provide year-round access to club information
+
+*	Create a centralized platform for all school club information
+*	Improve club visibility and accessibility for students
+*	Showcase club achievements and activities
+*	Support new students, new clubs, and those who miss club fairs
+*	Provide year-round access to club information
+
 1.2 Key Features Under Consideration
-•   	Comprehensive club directory with detailed profiles
-•   	Activity calendars and event listings
-•   	Achievement showcases (Science Olympiad, DECA, Debate competitions, etc.)
-•   	Search and filter capabilities
-•   	Integration options with existing school website
-1.3 Core Technical Architecture
+*	Comprehensive club directory with detailed profiles
+*	Activity calendars and event listings
+*	Achievement showcases (Science Olympiad, DECA, Debate competitions, etc.)
+*	Search and filter capabilities
+*	Integration options with existing school website
+
+1.3 Core Technical Architecture\
 The platform’s architecture centers on two critical technical components that enable efficient content management and dynamic user interaction.
-1.3.1 Google Sheets Integration
+
+1.3.1 Google Sheets Integration\
 A crucial element of this project is establishing a direct connection between the website platform and a Google Sheets document. This integration serves as the content management backbone of the system, enabling:
-•   	Centralized Data Management: All club information (descriptions, proctors, meeting days, tags, etc.) stored in a single, organized spreadsheet
-•   	Easy Updates: Club leaders and administrators can update information through familiar spreadsheet interface without technical knowledge
-•   	Real-Time Synchronization: Changes made in the Google Sheet automatically reflect on the website without manual intervention
-•   	Version Control: Google Sheets built-in version history provides audit trail of all changes
-•   	Collaborative Editing: Multiple administrators can work simultaneously with proper permissions
-•   	Data Portability: Information remains accessible and exportable even if the website platform changes
+*	Centralized Data Management: All club information (descriptions, proctors, meeting days, tags, etc.) stored in a single, organized spreadsheet
+*	Easy Updates: Club leaders and administrators can update information through familiar spreadsheet interface without technical knowledge
+*	Real-Time Synchronization: Changes made in the Google Sheet automatically reflect on the website without manual intervention
+*	Version Control: Google Sheets built-in version history provides audit trail of all changes
+*	Collaborative Editing: Multiple administrators can work simultaneously with proper permissions
+*	Data Portability: Information remains accessible and exportable even if the website platform changes
 Technical Implementation Considerations:
-•   	Google Sheets API integration for programmatic data access
-•   	Structured data format with defined columns for each club attribute
-•   	Caching strategy to balance real-time updates with website performance
-•   	Authentication and permission management for sheet access
-•   	Error handling for API rate limits and connectivity issues
-1.3.2 Dynamic Club Page Interface
-The platform features a sophisticated dynamic interface that provides an intuitive browsing experience through expandable club cards. This interface design is essential to the user experience and includes:
+*	Google Sheets API integration for programmatic data access
+*	Structured data format with defined columns for each club attribute
+*	Caching strategy to balance real-time updates with website performance
+*	Authentication and permission management for sheet access
+*	Error handling for API rate limits and connectivity issues
+
+1.3.2 Dynamic Club Page Interface\
+The platform features a sophisticated dynamic interface that provides an intuitive browsing experience through expandable club cards. This interface design is essential to the user experience and includes:\
 Initial View (Collapsed State):
-•   	Club Icon: Visual identifier/logo for quick recognition
-•   	Club Title: Official name prominently displayed
-•   	Club Tags: Categorization labels (e.g., “STEM,” “Arts,” “Service,” “Competitive”) for quick filtering and identification
+*	Club Icon: Visual identifier/logo for quick recognition
+*	Club Title: Official name prominently displayed
+*	Club Tags: Categorization labels (e.g., “STEM,” “Arts,” “Service,” “Competitive”) for quick filtering and identification
 Expanded View (When User Clicks/Taps):
 When a user interacts with a club card, it dynamically expands to reveal comprehensive information:
-•   	Club Description: Detailed overview of the club’s purpose, activities, and mission
-•   	Club Proctors: Leadership information including student leaders and faculty advisors with contact details
-•   	Club Tags: Full tag list remains visible for context
-•   	Club Meet Days: Schedule information showing when and where the club meets (day, time, location)
+*	Club Description: Detailed overview of the club’s purpose, activities, and mission
+*	Club Proctors: Leadership information including student leaders and faculty advisors with contact details
+*	Club Tags: Full tag list remains visible for context
+*	Club Meet Days: Schedule information showing when and where the club meets (day, time, location)
 User Experience Benefits:
-•   	Efficient Browsing: Users can quickly scan multiple clubs without loading separate pages
-•   	Progressive Disclosure: Information is revealed incrementally, preventing overwhelming interfaces
-•   	Mobile-Friendly: Expandable cards work seamlessly on touch devices
-•   	Contextual Navigation: Users maintain their position on the page rather than navigating back and forth
-•   	Visual Consistency: Uniform card layout creates a cohesive, professional appearance
+*	Efficient Browsing: Users can quickly scan multiple clubs without loading separate pages
+*	Progressive Disclosure: Information is revealed incrementally, preventing overwhelming interfaces
+*	Mobile-Friendly: Expandable cards work seamlessly on touch devices
+*	Contextual Navigation: Users maintain their position on the page rather than navigating back and forth
+*	Visual Consistency: Uniform card layout creates a cohesive, professional appearance
 Technical Implementation Considerations:
-•   	JavaScript framework for smooth expand/collapse animations
-•   	Responsive CSS grid or flexbox layout for card arrangement
-•   	Lazy loading for club icons and images to optimize performance
-•   	Dynamic content population from Google Sheets data
-•   	Accessibility features including keyboard navigation and screen reader support
-•   	URL parameter support for direct linking to expanded clubs
+*	JavaScript framework for smooth expand/collapse animations
+*	Responsive CSS grid or flexbox layout for card arrangement
+*	Lazy loading for club icons and images to optimize performance
+*	Dynamic content population from Google Sheets data
+*	Accessibility features including keyboard navigation and screen reader support
+*	URL parameter support for direct linking to expanded clubs
+
 1.4 Implementation Options
-•   	Option A: Standalone dedicated website
-•   	Option B: Integration with existing public school website
-2. Phase 1: Research and Planning
-2.1 Stakeholder Identification
+*	Option A: Standalone dedicated website
+*	Option B: Integration with existing public school website
+
+3. Phase 1: Research and Planning\
+2.1 Stakeholder Identification\
 The first critical step is identifying all stakeholders who will be affected by or contribute to the project. Understanding their interests and concerns ensures the platform meets actual needs.
-Stakeholder Group
-Interest Level
-Primary Concerns
-Engagement Strategy
-Students
-High
-Ease of use, accurate information, mobile accessibility
-Surveys, focus groups, usability testing
-Club Leaders
-High
-Easy content updates, recruitment support, achievement visibility
-Individual interviews, feature workshops
-Faculty Advisors
-Medium-High
-Time commitment, content moderation, administrative oversight
-Email surveys, advisory committee
-School Administration
-Medium
-Policy compliance, budget, brand consistency, security
-Formal presentations, approval meetings
-IT Department
-Medium
-Technical compatibility, maintenance, security standards
-Technical consultations, system requirements review
-Parents
-Low-Medium
-Student safety, appropriate content, accessibility
-Parent newsletter announcements, optional feedback
+
+- Stakeholder Group
+- Interest Level
+- Primary Concerns
+- Engagement Strategy
+- Students
+- High
+- Ease of use, accurate information, mobile accessibility
+- Surveys, focus groups, usability testing
+- Club Leaders
+- High
+- Easy content updates, recruitment support, achievement visibility
+- Individual interviews, feature workshops
+- Faculty Advisors
+- Medium-High
+- Time commitment, content moderation, administrative oversight
+- Email surveys, advisory committee
+- School Administration
+- Medium
+- Policy compliance, budget, brand consistency, security
+- Formal presentations, approval meetings
+- IT Department
+- Medium
+- Technical compatibility, maintenance, security standards
+- Technical consultations, system requirements review
+- Parents
+- Low-Medium
+- Student safety, appropriate content, accessibility
+- Parent newsletter announcements, optional feedback
 
  
 2.2 Interview Planning and Execution
 Conducting structured interviews with stakeholders is essential for gathering requirements and identifying potential challenges. The following approach ensures comprehensive feedback collection.
 2.2.1 Interview Preparation
-•   	Develop standardized interview questions for each stakeholder group
-•   	Schedule 15-30 minute sessions with representative stakeholders
-•   	Prepare project overview materials for context
-•   	Create documentation template for recording responses
+*	Develop standardized interview questions for each stakeholder group
+*	Schedule 15-30 minute sessions with representative stakeholders
+*	Prepare project overview materials for context
+*	Create documentation template for recording responses
 2.2.2 Key Interview Questions
 Opening Context:
-•   	"I am considering creating a website for our school clubs. This idea is still in its infancy and nothing is truly established yet. Everything is open to change. If there is a possible problem you see or if you do not agree with this idea in any way, that is perfectly fine and can be helpful. Please respond honestly."
+*	"I am considering creating a website for our school clubs. This idea is still in its infancy and nothing is truly established yet. Everything is open to change. If there is a possible problem you see or if you do not agree with this idea in any way, that is perfectly fine and can be helpful. Please respond honestly."
 Core Questions:
 1.	Is this something you would find useful or be interested in?
 ○  	If yes: What features would be most valuable to you?
@@ -128,182 +135,182 @@ Core Questions:
 ○  	Frequency of use, specific scenarios
 6.	What concerns do you have about implementation, maintenance, or usage?
 2.2.3 Interview Documentation
-•   	Record all responses in a standardized format
-•   	Categorize feedback by theme (features, concerns, technical requirements)
-•   	Identify patterns and recurring suggestions across stakeholder groups
-•   	Note any conflicting requirements for later resolution
+*	Record all responses in a standardized format
+*	Categorize feedback by theme (features, concerns, technical requirements)
+*	Identify patterns and recurring suggestions across stakeholder groups
+*	Note any conflicting requirements for later resolution
 3. Phase 2: Requirements Analysis
 3.1 Synthesizing Feedback
 After completing stakeholder interviews, analyze the collected data to identify clear requirements and priorities.
-•   	Create a consolidated requirements document listing all suggested features
-•   	Categorize requirements by stakeholder group and priority level
-•   	Identify must-have features versus nice-to-have enhancements
-•   	Document any technical constraints or limitations identified
+*	Create a consolidated requirements document listing all suggested features
+*	Categorize requirements by stakeholder group and priority level
+*	Identify must-have features versus nice-to-have enhancements
+*	Document any technical constraints or limitations identified
 3.2 Competitive Analysis
 Research existing club websites at other schools and similar organizations to understand best practices and common pitfalls.
-•   	Identify 5-10 comparable school club platforms
-•   	Evaluate their features, usability, and content organization
-•   	Document strengths and weaknesses of each platform
-•   	Extract design patterns and functionality ideas applicable to your project
+*	Identify 5-10 comparable school club platforms
+*	Evaluate their features, usability, and content organization
+*	Document strengths and weaknesses of each platform
+*	Extract design patterns and functionality ideas applicable to your project
 3.3 Technical Feasibility Assessment
 Evaluate technical options for implementation, considering school infrastructure, budget, and maintenance capabilities.
-•   	Consult with IT department about integration possibilities
-•   	Review existing school website platform and capabilities
-•   	Research content management systems suitable for club directories
-•   	Assess hosting options and associated costs
-•   	Determine authentication and security requirements
+*	Consult with IT department about integration possibilities
+*	Review existing school website platform and capabilities
+*	Research content management systems suitable for club directories
+*	Assess hosting options and associated costs
+*	Determine authentication and security requirements
 4. Phase 3: Design and Planning
 4.1 Information Architecture
 Develop the site structure and navigation flow based on stakeholder needs and best practices.
-•   	Create a site map showing all pages and their hierarchy
-•   	Define content categories and taxonomy for club classification
-•   	Design search and filter functionality specifications
-•   	Plan user pathways for different stakeholder groups
+*	Create a site map showing all pages and their hierarchy
+*	Define content categories and taxonomy for club classification
+*	Design search and filter functionality specifications
+*	Plan user pathways for different stakeholder groups
 4.2 Content Strategy
 Determine what information will be collected for each club and how it will be maintained.
 Core Club Profile Elements:
-•   	Club name, description, and mission statement
-•   	Meeting schedule (day, time, location)
-•   	Leadership team and faculty advisor contact information
-•   	Membership requirements and application process
-•   	Recent activities and upcoming events
-•   	Achievements and competition results
-•   	Photos and media gallery
+*	Club name, description, and mission statement
+*	Meeting schedule (day, time, location)
+*	Leadership team and faculty advisor contact information
+*	Membership requirements and application process
+*	Recent activities and upcoming events
+*	Achievements and competition results
+*	Photos and media gallery
 Content Management Workflow:
-•   	Define who can create and edit club content (club leaders, advisors, administrators)
-•   	Configure Google Sheets structure with clearly defined columns for each data field (see Google Sheets Structure below)
-•   	Establish approval process for new clubs or major changes
-•   	Create content guidelines and quality standards
-•   	Determine update frequency expectations
-•   	Set up Google Sheets sharing permissions to control edit access
+*	Define who can create and edit club content (club leaders, advisors, administrators)
+*	Configure Google Sheets structure with clearly defined columns for each data field (see Google Sheets Structure below)
+*	Establish approval process for new clubs or major changes
+*	Create content guidelines and quality standards
+*	Determine update frequency expectations
+*	Set up Google Sheets sharing permissions to control edit access
 Google Sheets Structure:
 The Google Sheets document should be structured with the following columns to support all platform features:
-•   	Club_Name: Official club title (text)
-•   	Club_Icon_URL: Link to club logo/icon image (URL)
-•   	Club_Description: Detailed description shown in expanded view (long text)
-•   	Club_Proctors: Names and contact info for student leaders and faculty advisors (text, comma-separated if multiple)
-•   	Club_Tags: Category labels for filtering (text, comma-separated, e.g., “STEM, Competition, Academic”)
-•   	Meet_Days: Schedule information (text, e.g., “Tuesdays 3:00 PM, Room 201”)
-•   	Achievements: Notable accomplishments (text, optional)
-•   	Status: Active/Inactive flag to control display (dropdown: “Active” or “Inactive”)
-•   	Last_Updated: Timestamp of last modification (date, can be auto-populated)
+*	Club_Name: Official club title (text)
+*	Club_Icon_URL: Link to club logo/icon image (URL)
+*	Club_Description: Detailed description shown in expanded view (long text)
+*	Club_Proctors: Names and contact info for student leaders and faculty advisors (text, comma-separated if multiple)
+*	Club_Tags: Category labels for filtering (text, comma-separated, e.g., “STEM, Competition, Academic”)
+*	Meet_Days: Schedule information (text, e.g., “Tuesdays 3:00 PM, Room 201”)
+*	Achievements: Notable accomplishments (text, optional)
+*	Status: Active/Inactive flag to control display (dropdown: “Active” or “Inactive”)
+*	Last_Updated: Timestamp of last modification (date, can be auto-populated)
 4.3 Visual Design and Wireframing
 Create low-fidelity wireframes and design mockups to visualize the platform before development.
-•   	Sketch basic layout concepts for key pages (homepage, club directory, individual club pages)
-•   	Develop wireframes showing content placement and navigation
-•   	Ensure design aligns with school branding guidelines
-•   	Plan for mobile-responsive layouts
-•   	Get feedback on wireframes from key stakeholders
+*	Sketch basic layout concepts for key pages (homepage, club directory, individual club pages)
+*	Develop wireframes showing content placement and navigation
+*	Ensure design aligns with school branding guidelines
+*	Plan for mobile-responsive layouts
+*	Get feedback on wireframes from key stakeholders
 4.4 Technology Selection
 Based on requirements and technical assessment, select the appropriate technology stack.
 Key Decisions:
-•   	Platform choice (WordPress, custom development, school CMS integration, etc.)
-•   	Hosting solution (school servers, cloud hosting, third-party service)
-•   	Database and content management approach
-•   	Google Sheets API integration for backend data management (critical requirement)
-•   	Frontend framework supporting dynamic expandable card components (React, Vue, or vanilla JavaScript)
-•   	Authentication system integration
-•   	Analytics and monitoring tools
+*	Platform choice (WordPress, custom development, school CMS integration, etc.)
+*	Hosting solution (school servers, cloud hosting, third-party service)
+*	Database and content management approach
+*	Google Sheets API integration for backend data management (critical requirement)
+*	Frontend framework supporting dynamic expandable card components (React, Vue, or vanilla JavaScript)
+*	Authentication system integration
+*	Analytics and monitoring tools
 Critical Technical Requirements:
-•   	Google Sheets Integration: Implementation must support OAuth 2.0 authentication, handle API rate limits gracefully, and implement caching strategy for optimal performance
-•   	Dynamic Interface Components: Must support smooth expand/collapse animations, maintain scroll position during interactions, and work consistently across desktop and mobile devices
-•   	Performance: Platform must load initial view within 2 seconds and handle 50+ club cards without performance degradation
-•   	Data Validation: Implement validation for Google Sheets data format to ensure all required fields are present and properly formatted
+*	Google Sheets Integration: Implementation must support OAuth 2.0 authentication, handle API rate limits gracefully, and implement caching strategy for optimal performance
+*	Dynamic Interface Components: Must support smooth expand/collapse animations, maintain scroll position during interactions, and work consistently across desktop and mobile devices
+*	Performance: Platform must load initial view within 2 seconds and handle 50+ club cards without performance degradation
+*	Data Validation: Implement validation for Google Sheets data format to ensure all required fields are present and properly formatted
 5. Phase 4: Prototype Development
 5.1 Minimum Viable Product (MVP) Definition
 Define the simplest version of the platform that delivers core value and can be tested with real users.
 MVP Core Features:
-•   	Google Sheets integration as the primary data source with real-time synchronization
-•   	Dynamic expandable club cards showing icon, title, and tags in collapsed view
-•   	Expanded club view revealing description, proctors, tags, and meet days when clicked
-•   	Tag-based filtering system for easy club discovery
-•   	Basic search functionality by club name
-•   	Mobile-responsive design with smooth touch interactions
+*	Google Sheets integration as the primary data source with real-time synchronization
+*	Dynamic expandable club cards showing icon, title, and tags in collapsed view
+*	Expanded club view revealing description, proctors, tags, and meet days when clicked
+*	Tag-based filtering system for easy club discovery
+*	Basic search functionality by club name
+*	Mobile-responsive design with smooth touch interactions
 5.2 Initial Data Collection
 Gather initial content for 5-10 pilot clubs to populate the prototype.
-•   	Select diverse clubs representing different activity types
-•   	Create standardized data collection forms
-•   	Work with club leaders to gather complete information
-•   	Verify accuracy and completeness of all data
+*	Select diverse clubs representing different activity types
+*	Create standardized data collection forms
+*	Work with club leaders to gather complete information
+*	Verify accuracy and completeness of all data
 5.3 Prototype Development
 Build a functional prototype incorporating MVP features and pilot club data.
-•   	Set up development environment
-•   	Implement core features according to technical specifications
-•   	Populate with pilot club data
-•   	Conduct internal testing to identify and fix bugs
-•   	Ensure accessibility standards are met
+*	Set up development environment
+*	Implement core features according to technical specifications
+*	Populate with pilot club data
+*	Conduct internal testing to identify and fix bugs
+*	Ensure accessibility standards are met
 6. Phase 5: Testing and Iteration
 6.1 Usability Testing
 Conduct structured testing sessions with representative users from each stakeholder group.
-•   	Recruit 3-5 users from each primary stakeholder group
-•   	Design specific tasks for users to complete (find a club, update information, etc.)
-•   	Observe users interacting with the prototype
-•   	Document pain points, confusion, and usability issues
-•   	Collect qualitative feedback through post-test interviews
+*	Recruit 3-5 users from each primary stakeholder group
+*	Design specific tasks for users to complete (find a club, update information, etc.)
+*	Observe users interacting with the prototype
+*	Document pain points, confusion, and usability issues
+*	Collect qualitative feedback through post-test interviews
 6.2 Feedback Analysis and Prioritization
 Systematically review all testing feedback to identify necessary improvements.
-•   	Categorize issues by severity (critical, major, minor)
-•   	Group related feedback into themes
-•   	Prioritize fixes based on impact and effort required
-•   	Create an iteration plan addressing high-priority items
+*	Categorize issues by severity (critical, major, minor)
+*	Group related feedback into themes
+*	Prioritize fixes based on impact and effort required
+*	Create an iteration plan addressing high-priority items
 6.3 Iterative Refinement
 Implement improvements based on testing feedback and conduct additional rounds of testing as needed.
-•   	Address critical usability issues first
-•   	Refine design and functionality based on user feedback
-•   	Conduct follow-up testing with revised prototype
-•   	Continue iteration until core functionality meets user needs
+*	Address critical usability issues first
+*	Refine design and functionality based on user feedback
+*	Conduct follow-up testing with revised prototype
+*	Continue iteration until core functionality meets user needs
 7. Phase 6: Documentation and Planning for Next Semester
 7.1 Technical Documentation
 Create comprehensive documentation to support ongoing development and maintenance.
-•   	System architecture documentation
-•   	Database schema and data dictionary
-•   	API documentation (if applicable)
-•   	Code comments and README files
-•   	Deployment and hosting instructions
+*	System architecture documentation
+*	Database schema and data dictionary
+*	API documentation (if applicable)
+*	Code comments and README files
+*	Deployment and hosting instructions
 7.2 User Documentation
 Develop guides for different user types to facilitate adoption.
-•   	Student user guide for browsing and searching clubs
-•   	Club leader guide for content management
-•   	Administrator guide for platform oversight
-•   	Video tutorials for key functions
+*	Student user guide for browsing and searching clubs
+*	Club leader guide for content management
+*	Administrator guide for platform oversight
+*	Video tutorials for key functions
 7.3 Maintenance and Sustainability Plan
 Establish procedures to ensure the platform remains functional and current after initial development.
-•   	Define content update responsibilities and schedules
-•   	Establish technical support contact and escalation procedures
-•   	Create backup and recovery protocols
-•   	Plan for annual content audits and updates
-•   	Budget for ongoing hosting and maintenance costs
+*	Define content update responsibilities and schedules
+*	Establish technical support contact and escalation procedures
+*	Create backup and recovery protocols
+*	Plan for annual content audits and updates
+*	Budget for ongoing hosting and maintenance costs
 7.4 Semester Summary and Lessons Learned
 Document insights from the first semester to improve future phases.
-•   	Summarize accomplishments and deliverables
-•   	Document challenges encountered and how they were addressed
-•   	Record stakeholder feedback and satisfaction levels
-•   	Identify what worked well and should be continued
-•   	Note areas for improvement in subsequent development phases
+*	Summarize accomplishments and deliverables
+*	Document challenges encountered and how they were addressed
+*	Record stakeholder feedback and satisfaction levels
+*	Identify what worked well and should be continued
+*	Note areas for improvement in subsequent development phases
 7.5 Next Semester Planning
 Define clear objectives and action items for the second semester based on first-semester learnings.
-•   	Expand pilot program to include all school clubs
-•   	Implement additional features based on stakeholder requests
-•   	Develop training program for club leaders and advisors
-•   	Plan official launch and promotion strategy
-•   	Establish metrics for measuring platform success and adoption
+*	Expand pilot program to include all school clubs
+*	Implement additional features based on stakeholder requests
+*	Develop training program for club leaders and advisors
+*	Plan official launch and promotion strategy
+*	Establish metrics for measuring platform success and adoption
 8. Conclusion
 The first semester of this project focuses on thorough research, planning, and prototype development. By systematically engaging stakeholders, analyzing requirements, and building a testable prototype, you create a solid foundation for successful implementation. The key to success is maintaining flexibility, incorporating feedback at every stage, and documenting everything for future reference.
 This structured approach ensures that the final platform truly serves the needs of students, club leaders, and school administration while being technically feasible and sustainable over time. The documentation and lessons learned from the first semester will be invaluable as the project moves into full development and deployment in subsequent semesters.
 Appendices
 Appendix A: Sample Interview Documentation Template
 Interviewee Information:
-•   	Name:
-•   	Stakeholder Group:
-•   	Date:
-•   	Duration:
+*	Name:
+*	Stakeholder Group:
+*	Date:
+*	Duration:
 Key Responses:
-•   	Overall interest level: [High/Medium/Low]
-•   	Most desired features:
-•   	Primary concerns:
-•   	Similar platforms referenced:
-•   	Implementation preference:
-•   	Additional suggestions:
+*	Overall interest level: [High/Medium/Low]
+*	Most desired features:
+*	Primary concerns:
+*	Similar platforms referenced:
+*	Implementation preference:
+*	Additional suggestions:
 Appendix B: Timeline Overview
 A suggested 16-week timeline for first semester activities:
 Weeks
@@ -335,19 +342,19 @@ Finalize documentation, lessons learned, next semester planning
 Appendix C: Success Metrics
 Recommended metrics to track project success:
 First Semester Metrics:
-•   	Number of stakeholder interviews completed
-•   	Percentage of stakeholders expressing interest in the project
-•   	Number of pilot clubs participating
-•   	Prototype completion rate (features implemented vs. planned)
-•   	Usability test success rate (tasks completed without assistance)
-•   	Average user satisfaction score from testing sessions
+*	Number of stakeholder interviews completed
+*	Percentage of stakeholders expressing interest in the project
+*	Number of pilot clubs participating
+*	Prototype completion rate (features implemented vs. planned)
+*	Usability test success rate (tasks completed without assistance)
+*	Average user satisfaction score from testing sessions
 Future Launch Metrics:
-•   	Percentage of clubs with complete profiles
-•   	Monthly active users (students visiting the site)
-•   	Average session duration
-•   	Club profile update frequency
-•   	New club member inquiry rate
-•   	User feedback sentiment (positive/neutral/negative)
+*	Percentage of clubs with complete profiles
+*	Monthly active users (students visiting the site)
+*	Average session duration
+*	Club profile update frequency
+*	New club member inquiry rate
+*	User feedback sentiment (positive/neutral/negative)
 Comprehensive list of clubs/activities/affinity groups with club proctors and a club description:
 Acorn Coding (Brandão)
 This club provides students with the opportunity to learn and collaborate with others interested in programming. For anyone who enjoys coding games, apps, websites or even for those who are curious about how technology works, this is the place! Our ultimate goal is to provide an open environment where students have the ability to create without limits both individually and as a team. 
@@ -355,7 +362,7 @@ This club provides students with the opportunity to learn and collaborate with o
 African American Male Association (AAMA) (Smith)
 A well-rounded outlook on what it means to be an African American Male at Shipley. Focused on supporting each other in Culture, Social, and Educational development.
 
-American Red Cross Club (Schauerman and Strickler) ***New Club!
+American Red Cross Club (Schauerman and Strickler) ***New Club!***
 A Red Cross Club is connected to the American Red Cross that gives you the chance to serve your community through activities like organizing blood drives and teaching disaster preparedness. Club members can gain leadership experience, learn emergency skills, and tackle important local and global issues in creative ways. By volunteering, you join a worldwide network focused on helping others, while making a real impact. The American Red Cross depends on volunteers to provide disaster relief, support military families, and save lives through health and safety programs.
 
 Animal Awareness Club (Fisher)
@@ -378,7 +385,7 @@ The Beacon is the official student newspaper for the school. Established in 1955
 Belonging and Connection Committee (Alicea, Frankel, Smith)
 Creates spaces for the Shipley community to advance identities through cultural interconnectedness. Promotes cultural understanding and advancements through actionable goals
 
-Beyond Robotics (Harris) ***New Club!
+Beyond Robotics (Harris) ***New Club!***
 Beyond Robotics is for two types of students who want to make an impact with our Robotics Team. First, it’s a space for current robotics members who want additional time to focus on building, designing, and coding beyond our regular practices. Second, it’s for students who want to take the lead on the non-technical but equally vital parts of the FIRST Tech Challenge program—managing our Engineering Portfolio, branding and marketing, fundraising, and community outreach efforts that showcase how our team embraces the values of Gracious Professionalism® and Coopertition®. Whether you’re interested in hands-on robot work or helping the team shine through outreach and impact, there’s a place for you in Beyond Robotics.
 
 Book Club (Philambolis & Gearhart)
@@ -442,7 +449,7 @@ Math Peer Tutoring (Chirlian)
 Math Peer Tutoring offers a chance for students to learn about teaching math while helping their peers. You'll work closely with math teachers to develop skills such as clear communication, problem-solving, and teaching techniques. Later in the year, you'll be able to set up individual sessions with peers who need extra help. To join, you should have completed Algebra II and be excited about math and teaching others.  
 
 Math Team (Rebholz)
-We are participating in the “Philadelphia Area Math League for Independent Schools”. This is a Fall league where students meet before school for 30-min online weekly matches, which alternate in group and individual format. At the end of the season there is also an in-person playoff event. The Shipley Math Team has enjoyed a great history over the years, but the focus is on fun and team spirit.   
+We are participating in the “Philadelphia Area Math League for Independent Schools”. This is a Fall league where students meet before school for 30-min online weekly matches, which alternate in group and individual format. At the end of the season there is also an in-person playoff event. The Shipley Math Team has enjoyed a great history over the years, but the focus is on fun and team spirit.
 
 Middle Eastern North African (MENA) (Smith)
 Develops healthy cultural and racial identities. Celebrates and promotes a positive understanding of culture, history, and advancement among MENA students.
@@ -453,13 +460,13 @@ The Mock Trial activity involves a simulation of a civic or criminal trial, with
 Model UN (Simpson)
 For students interested in international relations, history, and politics, this activity offers a great opportunity to develop public-speaking, problem-solving and collaborative skills. Shipley delegates will attend the NAIMUN Model UN conference Washington, D.C. in February. At the conference, students represent specific nations or participate in panels addressing issues of global concern, such as global warming, terrorism, or economic development. Having the time and the motivation to properly research any topic is essential. Open to all Upper School students, but prospective members will have to produce a short research paper and participate in try-outs in order to join.
 
-Music Mentors (Gilver)  ***New Club!
+Music Mentors (Gilver)  ***New Club!***
 Music has the power to inspire, connect, and build confidence in students of all ages. The Music Mentors program seeks to create a bridge between the Shipley Upper and Lower School communities by pairing Upper School music students with younger musicians in band, orchestra, and choir. Through weekly mentorship, Upper School students will provide guidance, encouragement, and practical support, fostering a stronger community and promoting music as a lifelong passion.
 
 National History Day (Gillin)
 National History Day is a competition that allows you to explore topics that you may have never heard of before, or dive further into topics that you have heard of. Each year, there is a theme and each history project must follow that theme. There are a multitude of project types like documentary, website, exhibit or poster, performance, and more. The competition has local, state, and national levels.
 
-Plates of Promise (Atkins) ***New Club!
+Plates of Promise (Atkins) ***New Club!***
 Our club is dedicated to fighting hunger in our community by collecting and donating food to local food banks and shelters. We believe that everyone deserves access to nutritious meals, and through regular food drives and volunteer efforts, we aim to make a positive impact one meal at a time. Whether it’s organizing donations or spreading awareness, we’re committed to helping those in need.
 
 Politics & Activism (Goren, Gillin) 
@@ -468,7 +475,7 @@ A club for civically engaged students, we typically discuss current events and w
 Quiz Bowl (Varner)  
 Quiz bowl is a fast-paced trivia competition in which teams of four players compete to answer questions that cover academic subjects like literature and science as well as the broader world of popular culture and current events. We will be competing in tournaments where we can test our knowledge against other schools! Everyone is welcome on the team!
 
-Robotics Team (Harris) ***New Club! - Not part of the regular Flex Club Request Process. See information on how to sign-up for Robotics in the blurb below.
+Robotics Team (Harris) ***New Club!*** - Not part of the regular Flex Club Request Process. See information on how to sign-up for Robotics in the blurb below.
 A brand-new Robotics Club is kicking off this fall! Our season runs September through April, with practices Monday–Thursday, 3:30–5:00 pm. We’re building an FTC competition team, and we need coders, builders, marketers, engineers, and anyone who just wants to have fun—no experience needed! Don’t worry if you’ve got schedule conflicts, we’ll work it out together. Ready to join? Sign ups and more info can be found HERE!  IF you have any questions please reach out to Mr.Harris at jharris@shipleyschool.org
 
 SCOPE (Foster +Foltiny)

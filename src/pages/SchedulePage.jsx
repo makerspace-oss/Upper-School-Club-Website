@@ -32,12 +32,27 @@ async function getLogoDataUrl() {
 if (typeof window !== "undefined") getLogoDataUrl();
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+/** Time slots a club can meet in. Clubs only conflict within the same slot. */
+const PERIODS = ["Flex", "Long Break"];
+function periodOf(club) {
+  return /long\s*break/i.test(club?.Meeting_Time || "") ? "Long Break" : "Flex";
+}
 const DAY_FULL = {
   monday: "Mon", tuesday: "Tue", wednesday: "Wed", thursday: "Thu", friday: "Fri",
   mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri",
 };
 
 /* ─── Parsing ─── */
+
+/**
+ * Rotation days 1–10 map onto two five-day weeks:
+ *   Day 1–5  → Mon–Fri of the Blue week
+ *   Day 6–10 → Mon–Fri of the Green week
+ */
+function rotationDayToSlot(n) {
+  if (!Number.isInteger(n) || n < 1 || n > 10) return null;
+  return { day: DAYS[(n - 1) % 5], week: n <= 5 ? "Blue" : "Green" };
+}
 
 function parseMeetDays(meetDays) {
   if (!meetDays || /see schedule|weekly|once|–/i.test(meetDays)) return [];
@@ -46,6 +61,8 @@ function parseMeetDays(meetDays) {
     .map((s) => s.trim())
     .filter(Boolean)
     .map((entry) => {
+      const rotationMatch = entry.match(/^day\s*(\d+)$/i);
+      if (rotationMatch) return rotationDayToSlot(Number(rotationMatch[1]));
       const weekMatch = entry.match(/\[(blue|green)\]/i);
       const week = weekMatch
         ? weekMatch[1].charAt(0).toUpperCase() + weekMatch[1].slice(1).toLowerCase()
@@ -54,7 +71,7 @@ function parseMeetDays(meetDays) {
       const day = DAY_FULL[dayPart] || null;
       return { day, week };
     })
-    .filter((e) => e.day);
+    .filter((e) => e && e.day);
 }
 
 function getClubDaysForWeek(club, weekType) {
@@ -66,12 +83,13 @@ function getClubDaysForWeek(club, weekType) {
     .filter(Boolean);
 }
 
-/** Build a simple day → [clubs] map for a week type */
-function buildDayGrid(clubs, weekType, overrides = {}) {
+/** Build a simple day → [clubs] map for a week type, limited to one period. */
+function buildDayGrid(clubs, weekType, overrides = {}, period = "Flex") {
   const grid = {};
   DAYS.forEach((_, i) => { grid[i] = []; });
 
   clubs.forEach((club) => {
+    if (periodOf(club) !== period) return;
     const overrideKey = `${club.id}-${weekType}`;
     if (overrides[overrideKey] !== undefined) {
       const dayIdx = overrides[overrideKey];
@@ -103,16 +121,32 @@ function findFreeDays(club, weekType, grid, currentDayIdx) {
     .filter(({ dayIdx }) => grid[dayIdx].filter((c) => c.id !== club.id).length === 0);
 }
 
-function findAlternativeClubs(allClubs, scheduleIds, weekType, grid) {
+function findAlternativeClubs(allClubs, scheduleIds, weekType, gridsByPeriod) {
   return allClubs.filter((club) => {
     if (scheduleIds.has(club.id) || club.Status !== "Active") return false;
     const days = getClubDaysForWeek(club, weekType);
     if (days.length === 0) return false;
+    const grid = gridsByPeriod[periodOf(club)];
     return days.some((day) => {
       const dayIdx = DAYS.indexOf(day);
       return dayIdx !== -1 && grid[dayIdx].length === 0;
     });
   });
+}
+
+/** Periods to show for a week: Flex always, Long Break only if a scheduled club uses it. */
+function periodsFor(clubs) {
+  return PERIODS.filter((p) => p === "Flex" || clubs.some((c) => periodOf(c) === p));
+}
+
+function buildGridsByPeriod(clubs, weekType, overrides) {
+  const grids = {};
+  PERIODS.forEach((p) => { grids[p] = buildDayGrid(clubs, weekType, overrides, p); });
+  return grids;
+}
+
+function countOverlaps(gridsByPeriod) {
+  return PERIODS.reduce((n, p) => n + findOverlaps(gridsByPeriod[p]).length, 0);
 }
 
 /* ─── Overlap Modal ─── */
@@ -123,7 +157,7 @@ function OverlapModal({ club, currentDay, weekType, freeDays, alternatives, onMo
         <button type="button" className="replace-modal__close" onClick={onClose}>&times;</button>
         <h3 className="replace-modal__title">Resolve overlap</h3>
         <p className="replace-modal__subtitle">
-          <strong>{club.Club_Name}</strong> overlaps on {currentDay} &middot; {weekType} Week
+          <strong>{club.Club_Name}</strong> overlaps on {currentDay} &middot; {weekType} Week &middot; {periodOf(club)}
         </p>
 
         {freeDays.length > 0 && (
@@ -151,7 +185,7 @@ function OverlapModal({ club, currentDay, weekType, freeDays, alternatives, onMo
                 <li key={alt.id} className="replace-modal__item">
                   <div className="replace-modal__item-info">
                     <span className="replace-modal__item-name">{alt.Club_Name}</span>
-                    <span className="replace-modal__item-days">{alt.Meet_Days || "See schedule"}</span>
+                    <span className="replace-modal__item-days">{alt.Meet_Days || "See schedule"} &middot; {periodOf(alt)}</span>
                   </div>
                   <div className="replace-modal__item-actions">
                     <button
@@ -224,25 +258,25 @@ function FinalizeModal({ clubs, onClose }) {
   );
 }
 
-/* ─── Week Grid (days only) ─── */
+/* ─── Week Grid (one row per period) ─── */
 function WeekGrid({ weekType, clubs, allClubs, scheduleIds, overrides, onRemove, onMoveDay, onSwap, color }) {
   const [modalClub, setModalClub] = useState(null);
   const [modalDayIdx, setModalDayIdx] = useState(null);
   const [viewClub, setViewClub] = useState(null);
 
-  const grid = useMemo(() => buildDayGrid(clubs, weekType, overrides), [clubs, weekType, overrides]);
-  const overlaps = useMemo(() => findOverlaps(grid), [grid]);
-  const overlapDays = useMemo(() => new Set(overlaps.map((o) => o.dayIdx)), [overlaps]);
+  const grids = useMemo(() => buildGridsByPeriod(clubs, weekType, overrides), [clubs, weekType, overrides]);
+  const periods = useMemo(() => periodsFor(clubs), [clubs]);
+  const overlapCount = useMemo(() => countOverlaps(grids), [grids]);
 
   const freeDays = useMemo(() => {
     if (!modalClub || modalDayIdx === null) return [];
-    return findFreeDays(modalClub, weekType, grid, modalDayIdx);
-  }, [modalClub, modalDayIdx, weekType, grid]);
+    return findFreeDays(modalClub, weekType, grids[periodOf(modalClub)], modalDayIdx);
+  }, [modalClub, modalDayIdx, weekType, grids]);
 
   const alternatives = useMemo(() => {
     if (!modalClub) return [];
-    return findAlternativeClubs(allClubs, scheduleIds, weekType, grid);
-  }, [modalClub, allClubs, scheduleIds, weekType, grid]);
+    return findAlternativeClubs(allClubs, scheduleIds, weekType, grids);
+  }, [modalClub, allClubs, scheduleIds, weekType, grids]);
 
   return (
     <div className={`week-grid week-grid--${weekType.toLowerCase()}`}>
@@ -250,9 +284,9 @@ function WeekGrid({ weekType, clubs, allClubs, scheduleIds, overrides, onRemove,
       <div className="week-grid__strip" style={{ background: color }}>
         <div className="week-grid__strip-label">
           {weekType} Week
-          {overlaps.length > 0 && (
+          {overlapCount > 0 && (
             <span className="week-grid__header-badge">
-              {overlaps.length} overlap{overlaps.length > 1 ? "s" : ""}
+              {overlapCount} overlap{overlapCount > 1 ? "s" : ""}
             </span>
           )}
         </div>
@@ -261,45 +295,51 @@ function WeekGrid({ weekType, clubs, allClubs, scheduleIds, overrides, onRemove,
         ))}
       </div>
 
-      {/* Body: Flex Period pill on left + day cells across */}
-      <div className="week-grid__body">
-        <div className="week-grid__period-cell">
-          <span className="week-grid__period-pill" style={{ color: color }}>
-            <span className="week-grid__period-dot" style={{ background: color }} />
-            Flex Period
-          </span>
-        </div>
-        {DAYS.map((day, dayIdx) => {
-          const dayClubs = grid[dayIdx] || [];
-          const hasOverlap = overlapDays.has(dayIdx);
-          return (
-            <div key={day} data-day={day} className={`week-grid__day${hasOverlap ? " week-grid__day--overlap" : ""}`}>
-              <div className="week-grid__day-clubs">
-                {dayClubs.length === 0 && (
-                  <span className="week-grid__day-empty" aria-hidden="true" />
-                )}
-                {dayClubs.map((club) => (
-                  <div
-                    key={club.id}
-                    className={`week-grid__event${hasOverlap ? " week-grid__event--overlap" : ""}`}
-                    style={{ borderLeftColor: color, cursor: hasOverlap ? "pointer" : "default" }}
-                    onClick={hasOverlap ? () => { setModalClub(club); setModalDayIdx(dayIdx); } : undefined}
-                    title={hasOverlap ? "Click to resolve overlap" : club.Club_Name}
-                  >
-                    <span className="week-grid__event-name">{club.Club_Name}</span>
-                    <button
-                      type="button"
-                      className="week-grid__event-remove"
-                      onClick={(e) => { e.stopPropagation(); onRemove(club.id); }}
-                      aria-label={`Remove ${club.Club_Name}`}
-                    >&times;</button>
-                  </div>
-                ))}
-              </div>
+      {/* Body: one row per period (Flex Period, Long Break) */}
+      {periods.map((period) => {
+        const grid = grids[period];
+        const overlapDays = new Set(findOverlaps(grid).map((o) => o.dayIdx));
+        return (
+          <div key={period} className="week-grid__body" data-period={period}>
+            <div className="week-grid__period-cell">
+              <span className="week-grid__period-pill" style={{ color: color }}>
+                <span className="week-grid__period-dot" style={{ background: color }} />
+                {period === "Flex" ? "Flex Period" : period}
+              </span>
             </div>
-          );
-        })}
-      </div>
+            {DAYS.map((day, dayIdx) => {
+              const dayClubs = grid[dayIdx] || [];
+              const hasOverlap = overlapDays.has(dayIdx);
+              return (
+                <div key={day} data-day={day} className={`week-grid__day${hasOverlap ? " week-grid__day--overlap" : ""}`}>
+                  <div className="week-grid__day-clubs">
+                    {dayClubs.length === 0 && (
+                      <span className="week-grid__day-empty" aria-hidden="true" />
+                    )}
+                    {dayClubs.map((club) => (
+                      <div
+                        key={club.id}
+                        className={`week-grid__event${hasOverlap ? " week-grid__event--overlap" : ""}`}
+                        style={{ borderLeftColor: color, cursor: hasOverlap ? "pointer" : "default" }}
+                        onClick={hasOverlap ? () => { setModalClub(club); setModalDayIdx(dayIdx); } : undefined}
+                        title={hasOverlap ? "Click to resolve overlap" : `${club.Club_Name} · ${period}`}
+                      >
+                        <span className="week-grid__event-name">{club.Club_Name}</span>
+                        <button
+                          type="button"
+                          className="week-grid__event-remove"
+                          onClick={(e) => { e.stopPropagation(); onRemove(club.id); }}
+                          aria-label={`Remove ${club.Club_Name}`}
+                        >&times;</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
 
       {modalClub && modalDayIdx !== null && (
         <OverlapModal
@@ -365,9 +405,10 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
   }, []);
 
   const hasOverlaps = useMemo(() => {
-    const blueGrid = buildDayGrid(scheduleClubs, "Blue", dayOverrides);
-    const greenGrid = buildDayGrid(scheduleClubs, "Green", dayOverrides);
-    return findOverlaps(blueGrid).length > 0 || findOverlaps(greenGrid).length > 0;
+    return (
+      countOverlaps(buildGridsByPeriod(scheduleClubs, "Blue", dayOverrides)) > 0 ||
+      countOverlaps(buildGridsByPeriod(scheduleClubs, "Green", dayOverrides)) > 0
+    );
   }, [scheduleClubs, dayOverrides]);
 
   const handleExport = useCallback(async () => {
@@ -379,11 +420,12 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
       const GREEN_WK = "#2d6a4f";
       const SHIPLEY_LOGO = await getLogoDataUrl();
 
-      const blueGrid = buildDayGrid(scheduleClubs, "Blue", dayOverrides);
-      const greenGrid = buildDayGrid(scheduleClubs, "Green", dayOverrides);
+      const blueGrids = buildGridsByPeriod(scheduleClubs, "Blue", dayOverrides);
+      const greenGrids = buildGridsByPeriod(scheduleClubs, "Green", dayOverrides);
+      const exportPeriods = periodsFor(scheduleClubs);
 
-      // Renders one row in the day-headers strip + one row of cells beneath
-      const renderWeek = (label, color, grid, accentBg) => {
+      // Renders one row in the day-headers strip + one row of cells per period beneath
+      const renderWeek = (label, color, grids, accentBg) => {
         const headerRow = `
           <div style="display:grid;grid-template-columns:140px repeat(5,1fr);align-items:stretch;background:${color};color:#fff;">
             <div style="padding:14px 18px;display:flex;align-items:center;font-family:'DM Sans',system-ui,sans-serif;font-size:13px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;border-right:1px solid rgba(255,255,255,0.18);">
@@ -394,12 +436,12 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
             `).join("")}
           </div>
         `;
-        const bodyRow = `
-          <div style="display:grid;grid-template-columns:140px repeat(5,1fr);background:#fff;">
+        const bodyRow = (period, grid, rowIdx) => `
+          <div style="display:grid;grid-template-columns:140px repeat(5,1fr);background:#fff;${rowIdx > 0 ? "border-top:1px solid #e4e7ed;" : ""}">
             <div style="padding:18px;display:flex;align-items:center;background:#f7f8fa;border-right:1px solid #e4e7ed;">
-              <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:#fff;border:1px solid #e4e7ed;border-radius:999px;font-size:10px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:0.08em;">
+              <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:#fff;border:1px solid #e4e7ed;border-radius:999px;font-size:10px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:0.08em;white-space:nowrap;">
                 <span style="width:6px;height:6px;border-radius:50%;background:${color};display:inline-block;"></span>
-                Flex Period
+                ${period === "Flex" ? "Flex Period" : escapeHtml(period)}
               </span>
             </div>
             ${DAYS.map((day, dayIdx) => {
@@ -422,7 +464,7 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
         return `
           <div style="border:1.5px solid #e4e7ed;border-radius:14px;overflow:hidden;box-shadow:0 2px 6px rgba(27,42,74,0.06);">
             ${headerRow}
-            ${bodyRow}
+            ${exportPeriods.map((p, i) => bodyRow(p, grids[p], i)).join("")}
           </div>
         `;
       };
@@ -458,8 +500,8 @@ export function SchedulePage({ scheduleClubs, allClubs = [], onRemove, onAdd }) 
 
           <!-- Schedule grids -->
           <div style="display:flex;flex-direction:column;gap:18px;">
-            ${renderWeek("Blue", BLUE, blueGrid, "#eef4f9")}
-            ${renderWeek("Green", GREEN_WK, greenGrid, "#edf5f0")}
+            ${renderWeek("Blue", BLUE, blueGrids, "#eef4f9")}
+            ${renderWeek("Green", GREEN_WK, greenGrids, "#edf5f0")}
           </div>
 
           <!-- Footer -->

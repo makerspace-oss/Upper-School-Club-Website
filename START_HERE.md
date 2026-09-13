@@ -27,10 +27,14 @@ A centralized site where students can **discover clubs**, read descriptions, fil
 │   ├── pages/
 │   │   └── SchedulePage.jsx # Sample weekly schedule from “Add to schedule”
 │   ├── data/
-│   │   └── clubs.js         # Fallback club list + getAllTags()
+│   │   └── clubs.js         # GENERATED fallback club list + getAllTags()
 │   └── lib/
-│       ├── supabaseClient.js   # Supabase client (optional; needs env)
-│       └── googleSheetClient.js # Fetch clubs from published Sheet CSV (optional)
+│       ├── googleSheetClient.js # Calls /api/clubs from the browser
+│       └── normalizeClub.js     # Sheet/CSV row → club object (shared by API + import script)
+├── api/
+│   └── clubs.js             # Vercel function: reads the Google Sheet with a service account
+├── scripts/
+│   └── import-clubs-csv.mjs # Regenerates src/data/clubs.js from a CSV export
 └── README.md
 ```
 
@@ -69,16 +73,45 @@ A centralized site where students can **discover clubs**, read descriptions, fil
 
 ---
 
-## Optional: Remote Data
+## Club Data
 
-- **Google Sheets**  
-  Set `VITE_CLUBS_SHEET_URL` to the **published CSV URL** of your sheet (File → Share → Publish to web → CSV).  
-  Column names should match the structure in [src/data/clubs.js](src/data/clubs.js) (e.g. `Club_Name`, `Club_Tags`, `Meet_Days`, `Status`, etc.).
+The club list ships **in the bundle**: [src/data/clubs.js](src/data/clubs.js) is generated from a CSV
+export of the clubs spreadsheet and is what the site renders. This is the source of truth.
 
-- **Supabase**  
-  Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. App expects a `clubs` table with columns like `Club_Name`, `Club_Icon_URL`, `Club_Description`, `Club_Proctors`, `Club_Tags`, `Meet_Days`, `Commitment`, `Status`.
+### Updating the clubs
 
-If neither is set (or they fail), the app uses the local [src/data/clubs.js](src/data/clubs.js) data.
+1. In Google Sheets open the **Clubs** tab and choose File → Download → Comma Separated Values (.csv).
+2. From the repo root run:
+   ```bash
+   node scripts/import-clubs-csv.mjs "path/to/Clubs.csv"
+   node scripts/verify-clubs-data.mjs "path/to/Clubs.csv"   # field-by-field check, must print ✓
+   npm run build
+   ```
+3. Commit `src/data/clubs.js` and push. Vercel deploys it.
+
+Expected spreadsheet headers (matched by name, so column order does not matter):
+
+`Club Name | Advisor Name | Description | Day (1-10) | Meeting Time (Flex/Long Break) | Major/Minor | Activity Type`
+
+How the columns appear on the site:
+
+| Spreadsheet column | On the site |
+|--------------------|-------------|
+| Club Name | Card title |
+| Advisor Name | "Advisor(s)" in the club dialog |
+| Description | Club dialog |
+| Day (1-10) | "Meeting Day(s)" as `Day 3, Day 8`; schedule page maps Day 1–5 to Blue week Mon–Fri and Day 6–10 to Green week Mon–Fri |
+| Meeting Time | "Meeting Time" in the dialog; schedule page shows Flex Period and Long Break as separate rows, so clubs only overlap within the same slot |
+| Major/Minor | "Commitment" in the dialog and a filter tag |
+| Activity Type | Filter tags |
+
+### Optional: live Google Sheet
+
+[api/clubs.js](api/clubs.js) can read the sheet directly with a service account, so edits show up without
+a redeploy. It is **off by default**. To enable it, share the spreadsheet with `GOOGLE_SERVICE_ACCOUNT_EMAIL`
+as a Viewer, set `GOOGLE_SHEET_ID` (and `GOOGLE_SHEET_TAB` if the tab is not named `Clubs`), then set
+`VITE_USE_LIVE_SHEET=true` in Vercel and redeploy. If the live fetch fails the bundled data is used.
+Both paths go through [src/lib/normalizeClub.js](src/lib/normalizeClub.js), so they produce identical objects.
 
 ---
 

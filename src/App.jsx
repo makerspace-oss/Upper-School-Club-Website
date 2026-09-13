@@ -9,13 +9,20 @@ import { Analytics } from "@vercel/analytics/react";
 import shipleyLogoUrl from "./assets/shipley-logo.png";
 import "./App.css";
 
+/**
+ * The club list ships in the bundle (src/data/clubs.js, generated from the
+ * spreadsheet). Live Google Sheet loading via /api/clubs is opt-in: set
+ * VITE_USE_LIVE_SHEET=true once the sheet is shared with the service account.
+ */
+const USE_LIVE_SHEET = import.meta.env.VITE_USE_LIVE_SHEET === "true";
+
 
 export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState([]);
   const [visibleCount, setVisibleCount] = useState(9);
   const [sheetClubs, setSheetClubs] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(USE_LIVE_SHEET);
   const [error, setError] = useState(null);
   const [scheduleClubs, setScheduleClubs] = useState(() => {
     try {
@@ -27,14 +34,14 @@ export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const allTags = useMemo(() => getAllTags(), []);
 
   useEffect(() => {
     localStorage.setItem("scheduleClubs", JSON.stringify(scheduleClubs));
   }, [scheduleClubs]);
 
-  // Load clubs from Google Sheets, fall back to local data.
+  // Optionally load clubs from Google Sheets, fall back to local data.
   useEffect(() => {
+    if (!USE_LIVE_SHEET) return undefined;
     let isMounted = true;
     async function loadClubs() {
       try {
@@ -69,6 +76,22 @@ export default function App() {
     if (sheetClubs && sheetClubs.length > 0) return sheetClubs;
     return fallbackClubs;
   }, [sheetClubs]);
+
+  const allTags = useMemo(() => getAllTags(sourceClubs), [sourceClubs]);
+
+  // Schedules are persisted in localStorage as full club objects. Re-resolve
+  // them against the current club list so stale copies (old meeting days,
+  // renamed or removed clubs) never linger after the data is updated.
+  useEffect(() => {
+    if (sourceClubs.length === 0) return;
+    const clubMap = new Map(sourceClubs.map((c) => [c.id, c]));
+    setScheduleClubs((prev) => {
+      const next = prev.map((c) => clubMap.get(c.id)).filter(Boolean);
+      const unchanged =
+        next.length === prev.length && next.every((c, i) => c === prev[i]);
+      return unchanged ? prev : next;
+    });
+  }, [sourceClubs]);
 
   // Decode shared schedule from URL (?s=base64)
   useEffect(() => {

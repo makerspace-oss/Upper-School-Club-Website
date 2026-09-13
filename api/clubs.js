@@ -1,6 +1,20 @@
 import { GoogleAuth } from "google-auth-library";
+import { rowsToClubs } from "../src/lib/normalizeClub.js";
 
 const SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"];
+
+/** Names of all tabs in a spreadsheet, or [] if the lookup fails. */
+async function listSheetTabs(sheetId, accessToken) {
+  try {
+    const metaUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties.title`;
+    const r = await fetch(metaUrl, { headers: { Authorization: `Bearer ${accessToken}` } });
+    if (!r.ok) return [];
+    const { sheets } = await r.json();
+    return (sheets ?? []).map((s) => s.properties?.title).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
 
 export default async function handler(req, res) {
   // Only allow GET
@@ -31,9 +45,10 @@ export default async function handler(req, res) {
     const client = await auth.getClient();
     const token = await client.getAccessToken();
 
-    // Fetch all rows from the "Public Clubs 2026-2027" tab.
+    // Fetch all rows from the clubs tab (default "Clubs"; override with GOOGLE_SHEET_TAB).
     // Tab names with spaces or special chars must be wrapped in single quotes per the Sheets API.
-    const range = encodeURIComponent("'Public Clubs 2026-2027'");
+    const tab = process.env.GOOGLE_SHEET_TAB || "Clubs";
+    const range = encodeURIComponent(`'${tab.replace(/'/g, "''")}'`);
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEET_ID}/values/${range}`;
 
     const response = await fetch(url, {
@@ -43,41 +58,27 @@ export default async function handler(req, res) {
     if (!response.ok) {
       const body = await response.text();
       console.error("[API] Google Sheets error:", response.status, body);
+      if (response.status === 400 && /Unable to parse range/i.test(body)) {
+        // The tab does not exist in this spreadsheet. Log what tabs it does
+        // have so the fix (GOOGLE_SHEET_ID or GOOGLE_SHEET_TAB) is obvious.
+        const tabs = await listSheetTabs(GOOGLE_SHEET_ID, token.token);
+        console.error(
+          `[API] Tab "${tab}" not found in spreadsheet ${GOOGLE_SHEET_ID}. ` +
+            `Available tabs: ${tabs.length ? tabs.map((t) => `"${t}"`).join(", ") : "(could not list)"}. ` +
+            `Set GOOGLE_SHEET_TAB to one of these, or point GOOGLE_SHEET_ID at the 2026-27 spreadsheet.`
+        );
+      }
       return res
         .status(502)
         .json({ error: "Failed to fetch data from Google Sheets." });
     }
 
     const { values } = await response.json();
-    if (!values || values.length < 2) {
-      return res.json([]);
-    }
 
-    // First row = frozen header row, remaining rows = club data.
-    // Columns by index:
-    //   A (0): Club/Activity Name
-    //   B (1): Leadership Structure
-    //   C (2): Student Name(s), Specific Role(s)
-    //   D (3): Meeting Day
-    //   E (4): Description
-    //   F (5): Notes
-    //   G (6): Tags (comma-separated)
-    const clubs = values.slice(1).map((row) => {
-      const name = (row[0] ?? "").trim();
-      if (!name) return null;
-      return {
-        id: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
-        Club_Name: name,
-        Club_Icon_URL: "",
-        Club_Description: (row[4] ?? "").trim(),
-        Leadership: (row[1] ?? "").trim(),
-        Club_Proctors: (row[2] ?? "").trim(),
-        Club_Tags: (row[6] ?? "").trim(),
-        Meet_Days: (row[3] ?? "").trim(),
-        Notes: (row[5] ?? "").trim(),
-        Status: "Active",
-      };
-    }).filter(Boolean);
+    // First row = header row (matched by column name, so column order in the
+    // sheet does not matter), remaining rows = club data.
+    // See src/lib/normalizeClub.js for the supported headers and output shape.
+    const clubs = rowsToClubs(values);
 
     // Cache for 5 minutes on Vercel edge
     res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=60");

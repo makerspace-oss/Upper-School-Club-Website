@@ -75,19 +75,21 @@ A centralized site where students can **discover clubs**, read descriptions, fil
 
 ## Club Data
 
-The club list ships **in the bundle**: [src/data/clubs.js](src/data/clubs.js) is generated from a CSV
-export of the clubs spreadsheet and is what the site renders. This is the source of truth.
+The club list ships **in the bundle**. [data/clubs-2026-27.csv](data/clubs-2026-27.csv) is the source of
+truth; [src/data/clubs.js](src/data/clubs.js) is generated from it and is what the site renders.
 
 ### Updating the clubs
 
-1. In Google Sheets open the **Clubs** tab and choose File → Download → Comma Separated Values (.csv).
+1. Edit [data/clubs-2026-27.csv](data/clubs-2026-27.csv) directly, or replace it with a fresh export of the
+   spreadsheet's **Clubs** tab (File → Download → Comma Separated Values). Keep the spreadsheet and this
+   file in sync, otherwise the next export will undo edits made only here.
 2. From the repo root run:
    ```bash
-   node scripts/import-clubs-csv.mjs "path/to/Clubs.csv"
-   node scripts/verify-clubs-data.mjs "path/to/Clubs.csv"   # field-by-field check, must print ✓
+   node scripts/import-clubs-csv.mjs data/clubs-2026-27.csv
+   node scripts/verify-clubs-data.mjs data/clubs-2026-27.csv   # field-by-field check, must print ✓
    npm run build
    ```
-3. Commit `src/data/clubs.js` and push. Vercel deploys it.
+3. Commit both files and push. Vercel deploys it.
 
 Expected spreadsheet headers (matched by name, so column order does not matter):
 

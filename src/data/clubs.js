@@ -4,7 +4,7 @@
  * Regenerate from a CSV export of the clubs Google Sheet:
  *   node scripts/import-clubs-csv.mjs "path/to/Clubs.csv"
  *
- * Source: Clubs_and_Activities_2026-27.xlsx - Clubs.csv
+ * Source: clubs-2026-27.csv
  * Generated: 2026-09-13
  * Clubs: 60
  */
@@ -175,15 +175,15 @@ export const clubs = [
     "Status": "Active"
   },
   {
-    "id": "care-for-cancer-club",
-    "Club_Name": "Care for Cancer Club",
+    "id": "business-club",
+    "Club_Name": "Business Club",
     "Club_Icon_URL": "",
-    "Club_Description": "In the Care for Cancer club, we will work to support those with cancer by doing kind deeds such as writing letters for them, providing room decorations, and making hats for those who have lost their hair. In doing so, we hope to create a partnership with a local hospital where members will hopefully be encouraged to go and volunteer. During meetings, we will provide snacks, and do an activity to either help a cancer patient or teach coping mechanisms or things along that line.",
-    "Club_Advisors": "TBC",
+    "Club_Description": "",
+    "Club_Advisors": "Pidot",
     "Leadership": "",
     "Club_Proctors": "",
-    "Club_Tags": "Service, Minor",
-    "Meet_Days": "Day 6",
+    "Club_Tags": "Business, Minor",
+    "Meet_Days": "Day 1",
     "Meeting_Time": "Flex",
     "Commitment": "Minor",
     "Notes": "",
@@ -482,7 +482,7 @@ export const clubs = [
     "Club_Advisors": "Atkins",
     "Leadership": "",
     "Club_Proctors": "",
-    "Club_Tags": "Activism, Major",
+    "Club_Tags": "Activism, Service, Major",
     "Meet_Days": "Day 9",
     "Meeting_Time": "Flex",
     "Commitment": "Major",

@@ -178,7 +178,7 @@ export const clubs = [
     "id": "business-club",
     "Club_Name": "Business Club",
     "Club_Icon_URL": "",
-    "Club_Description": "",
+    "Club_Description": "The Business Club provides students of all grades with a strong sense of business/entrepreneurship through analyzing successful businesses and ventures. Help prospective business students decide if pursuing it in college is the right choice.",
     "Club_Advisors": "Pidot",
     "Leadership": "",
     "Club_Proctors": "",

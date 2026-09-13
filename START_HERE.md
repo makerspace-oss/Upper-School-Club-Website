@@ -75,31 +75,43 @@ A centralized site where students can **discover clubs**, read descriptions, fil
 
 ## Club Data
 
-The site loads clubs in this order:
+The club list ships **in the bundle**: [src/data/clubs.js](src/data/clubs.js) is generated from a CSV
+export of the clubs spreadsheet and is what the site renders. This is the source of truth.
 
-1. **Live Google Sheet** via `/api/clubs` ([api/clubs.js](api/clubs.js)). The function reads the
-   `Clubs` tab (override with `GOOGLE_SHEET_TAB`) of the spreadsheet in `GOOGLE_SHEET_ID` using a
-   service account, and caches responses for 5 minutes. Edits to the sheet show up on the site
-   automatically; there is nothing to rerun.
-2. **Local fallback** ([src/data/clubs.js](src/data/clubs.js)) if the API is unavailable or
-   returns no rows.
+### Updating the clubs
 
-Both sources go through [src/lib/normalizeClub.js](src/lib/normalizeClub.js), which matches columns
-by header name. Expected headers for the 2026-27 sheet:
+1. In Google Sheets open the **Clubs** tab and choose File → Download → Comma Separated Values (.csv).
+2. From the repo root run:
+   ```bash
+   node scripts/import-clubs-csv.mjs "path/to/Clubs.csv"
+   node scripts/verify-clubs-data.mjs "path/to/Clubs.csv"   # field-by-field check, must print ✓
+   npm run build
+   ```
+3. Commit `src/data/clubs.js` and push. Vercel deploys it.
+
+Expected spreadsheet headers (matched by name, so column order does not matter):
 
 `Club Name | Advisor Name | Description | Day (1-10) | Meeting Time (Flex/Long Break) | Major/Minor | Activity Type`
 
-Rotation days map onto the schedule page as Day 1–5 = Blue week Mon–Fri, Day 6–10 = Green week Mon–Fri.
+How the columns appear on the site:
 
-### Refreshing the fallback data
+| Spreadsheet column | On the site |
+|--------------------|-------------|
+| Club Name | Card title |
+| Advisor Name | "Advisor(s)" in the club dialog |
+| Description | Club dialog |
+| Day (1-10) | "Meeting Day(s)" as `Day 3, Day 8`; schedule page maps Day 1–5 to Blue week Mon–Fri and Day 6–10 to Green week Mon–Fri |
+| Meeting Time | "Meeting Time" in the dialog; schedule page shows Flex Period and Long Break as separate rows, so clubs only overlap within the same slot |
+| Major/Minor | "Commitment" in the dialog and a filter tag |
+| Activity Type | Filter tags |
 
-Download the sheet tab as CSV (File → Download → CSV) and run:
+### Optional: live Google Sheet
 
-```bash
-node scripts/import-clubs-csv.mjs "path/to/Clubs.csv"
-```
-
-This rewrites `src/data/clubs.js`. Commit the result.
+[api/clubs.js](api/clubs.js) can read the sheet directly with a service account, so edits show up without
+a redeploy. It is **off by default**. To enable it, share the spreadsheet with `GOOGLE_SERVICE_ACCOUNT_EMAIL`
+as a Viewer, set `GOOGLE_SHEET_ID` (and `GOOGLE_SHEET_TAB` if the tab is not named `Clubs`), then set
+`VITE_USE_LIVE_SHEET=true` in Vercel and redeploy. If the live fetch fails the bundled data is used.
+Both paths go through [src/lib/normalizeClub.js](src/lib/normalizeClub.js), so they produce identical objects.
 
 ---
 

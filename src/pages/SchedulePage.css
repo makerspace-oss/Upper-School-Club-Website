@@ -761,3 +761,25 @@
   }
   .week-grid__event-name { font-size: 0.8125rem; }
 }
+
+/* ── Multiple period rows (Flex Period / Long Break) ── */
+.week-grid__body + .week-grid__body {
+  border-top: 1px solid var(--gray-100);
+}
+
+@media (max-width: 640px) {
+  /* Days stack vertically on mobile and the period cell is hidden, so label
+     the Long Break row explicitly. */
+  .week-grid__body[data-period="Long Break"]::before {
+    content: "Long Break";
+    display: block;
+    padding: 0.5rem 1rem 0.35rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gray-500, #6b7280);
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-100);
+  }
+}

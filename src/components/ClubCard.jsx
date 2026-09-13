@@ -85,6 +85,14 @@ export function ClubModal({ club, isOnSchedule, onAddToSchedule, onRemoveFromSch
         )}
 
         <div className="club-modal__details">
+          {club.Club_Advisors && (
+            <div className="club-modal__detail">
+              <span className="club-modal__detail-label">
+                {club.Club_Advisors.includes(",") ? "Advisors" : "Advisor"}
+              </span>
+              <span className="club-modal__detail-value">{club.Club_Advisors}</span>
+            </div>
+          )}
           {club.Leadership && (
             <div className="club-modal__detail">
               <span className="club-modal__detail-label">Leadership</span>
@@ -99,8 +107,22 @@ export function ClubModal({ club, isOnSchedule, onAddToSchedule, onRemoveFromSch
           )}
           {club.Meet_Days && (
             <div className="club-modal__detail">
-              <span className="club-modal__detail-label">Meeting Day</span>
+              <span className="club-modal__detail-label">
+                {club.Meet_Days.includes(",") ? "Meeting Days" : "Meeting Day"}
+              </span>
               <span className="club-modal__detail-value">{club.Meet_Days}</span>
+            </div>
+          )}
+          {club.Meeting_Time && (
+            <div className="club-modal__detail">
+              <span className="club-modal__detail-label">Meeting Time</span>
+              <span className="club-modal__detail-value">{club.Meeting_Time}</span>
+            </div>
+          )}
+          {club.Commitment && (
+            <div className="club-modal__detail">
+              <span className="club-modal__detail-label">Commitment</span>
+              <span className="club-modal__detail-value">{club.Commitment}</span>
             </div>
           )}
           {club.Notes && (

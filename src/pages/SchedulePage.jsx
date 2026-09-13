@@ -39,6 +39,16 @@ const DAY_FULL = {
 
 /* ─── Parsing ─── */
 
+/**
+ * Rotation days 1–10 map onto two five-day weeks:
+ *   Day 1–5  → Mon–Fri of the Blue week
+ *   Day 6–10 → Mon–Fri of the Green week
+ */
+function rotationDayToSlot(n) {
+  if (!Number.isInteger(n) || n < 1 || n > 10) return null;
+  return { day: DAYS[(n - 1) % 5], week: n <= 5 ? "Blue" : "Green" };
+}
+
 function parseMeetDays(meetDays) {
   if (!meetDays || /see schedule|weekly|once|–/i.test(meetDays)) return [];
   return meetDays
@@ -46,6 +56,8 @@ function parseMeetDays(meetDays) {
     .map((s) => s.trim())
     .filter(Boolean)
     .map((entry) => {
+      const rotationMatch = entry.match(/^day\s*(\d+)$/i);
+      if (rotationMatch) return rotationDayToSlot(Number(rotationMatch[1]));
       const weekMatch = entry.match(/\[(blue|green)\]/i);
       const week = weekMatch
         ? weekMatch[1].charAt(0).toUpperCase() + weekMatch[1].slice(1).toLowerCase()
@@ -54,7 +66,7 @@ function parseMeetDays(meetDays) {
       const day = DAY_FULL[dayPart] || null;
       return { day, week };
     })
-    .filter((e) => e.day);
+    .filter((e) => e && e.day);
 }
 
 function getClubDaysForWeek(club, weekType) {

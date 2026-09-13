@@ -27,10 +27,14 @@ A centralized site where students can **discover clubs**, read descriptions, fil
 │   ├── pages/
 │   │   └── SchedulePage.jsx # Sample weekly schedule from “Add to schedule”
 │   ├── data/
-│   │   └── clubs.js         # Fallback club list + getAllTags()
+│   │   └── clubs.js         # GENERATED fallback club list + getAllTags()
 │   └── lib/
-│       ├── supabaseClient.js   # Supabase client (optional; needs env)
-│       └── googleSheetClient.js # Fetch clubs from published Sheet CSV (optional)
+│       ├── googleSheetClient.js # Calls /api/clubs from the browser
+│       └── normalizeClub.js     # Sheet/CSV row → club object (shared by API + import script)
+├── api/
+│   └── clubs.js             # Vercel function: reads the Google Sheet with a service account
+├── scripts/
+│   └── import-clubs-csv.mjs # Regenerates src/data/clubs.js from a CSV export
 └── README.md
 ```
 
@@ -69,16 +73,33 @@ A centralized site where students can **discover clubs**, read descriptions, fil
 
 ---
 
-## Optional: Remote Data
+## Club Data
 
-- **Google Sheets**  
-  Set `VITE_CLUBS_SHEET_URL` to the **published CSV URL** of your sheet (File → Share → Publish to web → CSV).  
-  Column names should match the structure in [src/data/clubs.js](src/data/clubs.js) (e.g. `Club_Name`, `Club_Tags`, `Meet_Days`, `Status`, etc.).
+The site loads clubs in this order:
 
-- **Supabase**  
-  Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. App expects a `clubs` table with columns like `Club_Name`, `Club_Icon_URL`, `Club_Description`, `Club_Proctors`, `Club_Tags`, `Meet_Days`, `Commitment`, `Status`.
+1. **Live Google Sheet** via `/api/clubs` ([api/clubs.js](api/clubs.js)). The function reads the
+   `Clubs` tab (override with `GOOGLE_SHEET_TAB`) of the spreadsheet in `GOOGLE_SHEET_ID` using a
+   service account, and caches responses for 5 minutes. Edits to the sheet show up on the site
+   automatically; there is nothing to rerun.
+2. **Local fallback** ([src/data/clubs.js](src/data/clubs.js)) if the API is unavailable or
+   returns no rows.
 
-If neither is set (or they fail), the app uses the local [src/data/clubs.js](src/data/clubs.js) data.
+Both sources go through [src/lib/normalizeClub.js](src/lib/normalizeClub.js), which matches columns
+by header name. Expected headers for the 2026-27 sheet:
+
+`Club Name | Advisor Name | Description | Day (1-10) | Meeting Time (Flex/Long Break) | Major/Minor | Activity Type`
+
+Rotation days map onto the schedule page as Day 1–5 = Blue week Mon–Fri, Day 6–10 = Green week Mon–Fri.
+
+### Refreshing the fallback data
+
+Download the sheet tab as CSV (File → Download → CSV) and run:
+
+```bash
+node scripts/import-clubs-csv.mjs "path/to/Clubs.csv"
+```
+
+This rewrites `src/data/clubs.js`. Commit the result.
 
 ---
 

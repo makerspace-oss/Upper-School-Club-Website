@@ -27,7 +27,6 @@ export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const allTags = useMemo(() => getAllTags(), []);
 
   useEffect(() => {
     localStorage.setItem("scheduleClubs", JSON.stringify(scheduleClubs));
@@ -69,6 +68,8 @@ export default function App() {
     if (sheetClubs && sheetClubs.length > 0) return sheetClubs;
     return fallbackClubs;
   }, [sheetClubs]);
+
+  const allTags = useMemo(() => getAllTags(sourceClubs), [sourceClubs]);
 
   // Decode shared schedule from URL (?s=base64)
   useEffect(() => {

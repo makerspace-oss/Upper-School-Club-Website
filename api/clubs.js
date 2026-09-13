@@ -1,4 +1,5 @@
 import { GoogleAuth } from "google-auth-library";
+import { rowsToClubs } from "../src/lib/normalizeClub.js";
 
 const SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"];
 
@@ -31,9 +32,10 @@ export default async function handler(req, res) {
     const client = await auth.getClient();
     const token = await client.getAccessToken();
 
-    // Fetch all rows from the "Public Clubs 2026-2027" tab.
+    // Fetch all rows from the clubs tab (default "Clubs"; override with GOOGLE_SHEET_TAB).
     // Tab names with spaces or special chars must be wrapped in single quotes per the Sheets API.
-    const range = encodeURIComponent("'Public Clubs 2026-2027'");
+    const tab = process.env.GOOGLE_SHEET_TAB || "Clubs";
+    const range = encodeURIComponent(`'${tab.replace(/'/g, "''")}'`);
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEET_ID}/values/${range}`;
 
     const response = await fetch(url, {
@@ -49,35 +51,11 @@ export default async function handler(req, res) {
     }
 
     const { values } = await response.json();
-    if (!values || values.length < 2) {
-      return res.json([]);
-    }
 
-    // First row = frozen header row, remaining rows = club data.
-    // Columns by index:
-    //   A (0): Club/Activity Name
-    //   B (1): Leadership Structure
-    //   C (2): Student Name(s), Specific Role(s)
-    //   D (3): Meeting Day
-    //   E (4): Description
-    //   F (5): Notes
-    //   G (6): Tags (comma-separated)
-    const clubs = values.slice(1).map((row) => {
-      const name = (row[0] ?? "").trim();
-      if (!name) return null;
-      return {
-        id: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
-        Club_Name: name,
-        Club_Icon_URL: "",
-        Club_Description: (row[4] ?? "").trim(),
-        Leadership: (row[1] ?? "").trim(),
-        Club_Proctors: (row[2] ?? "").trim(),
-        Club_Tags: (row[6] ?? "").trim(),
-        Meet_Days: (row[3] ?? "").trim(),
-        Notes: (row[5] ?? "").trim(),
-        Status: "Active",
-      };
-    }).filter(Boolean);
+    // First row = header row (matched by column name, so column order in the
+    // sheet does not matter), remaining rows = club data.
+    // See src/lib/normalizeClub.js for the supported headers and output shape.
+    const clubs = rowsToClubs(values);
 
     // Cache for 5 minutes on Vercel edge
     res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=60");
